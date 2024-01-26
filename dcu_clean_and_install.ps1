@@ -1,3 +1,6 @@
+####!I do not know how this will go over in ninja, but check for winget, check for dcu, if dcu uninstall all, then reinstall, if not install, configure registry
+
+
 #OutWithTheDellBloat
 Set-ExecutionPolicy Bypass -scope Process -Force
 $ErrorActionPreference = “SilentlyContinue”
@@ -5,7 +8,6 @@ $ErrorActionPreference = “SilentlyContinue”
 #winget list --name "Dell"
 
 
-#I do not know how this will go over in ninja, but check for winget, check for dcu, if dcu uninstall all, then reinstall, if not install, configure registry
 
 $ResolveWingetPath = Resolve-Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*_x64__8wekyb3d8bbwe\winget.exe"
     if ($ResolveWingetPath){
@@ -75,7 +77,7 @@ Uninstall-package -name "Dell SupportAssist OS Recovery Plugin for Dell Update" 
 Uninstall-package -name "Dell SupportAssist Remediation" -allversions -force
 Uninstall-package -name "Dell Command | Update" -allversions -force
 Uninstall-package -name "Dell Digital Delivery" -allversions -force
-Uninstall-package -name "Dell COmmand | Configure" -allversions -force
+Uninstall-package -name "Dell Command | Configure" -allversions -force
 remove-item -path "HKLM:\SOFTWARE\Dell Inc" -Recurse -force
 remove-item -path "HKLM:\SOFTWARE\Dell Computer Corporation" -Recurse -force
 remove-item -path "HKLM:\SOFTWARE\Dell" -Recurse -force
