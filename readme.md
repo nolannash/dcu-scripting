@@ -10,7 +10,7 @@ This repository contains scripts and configurations for automating the deploymen
 
 #### File 1.1: DCU Download and install
 
--`dcu_clean_and_install`: As of now this file is completely empty, eventually this will be the first script that gets run,
+-`dcu_clean_and_install`: As of now this file needs cleaning and testing, eventually this will be the first script that gets run,
 the intention of this script is to check the device for the existance of ANY version of DCU, and if it does not find it install it, if it does find DCU on the device it completely uninstalls and then reinstalls with most up to date version.
 
 The deletion and reinstallation is done to ensure that no files, configuration settings etc. remain on a device --> this script is meant to be run either when a device is first setup for a user to ensure that DCU is on the device, if DCU is directly presenting an error or a major patch comes out to DCU
