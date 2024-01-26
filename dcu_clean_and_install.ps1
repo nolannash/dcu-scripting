@@ -5,6 +5,8 @@ $ErrorActionPreference = “SilentlyContinue”
 #winget list --name "Dell"
 
 
+#I do not know how this will go over in ninja, but check for winget, check for dcu, if dcu uninstall all, then reinstall, if not install, configure registry
+
 $ResolveWingetPath = Resolve-Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*_x64__8wekyb3d8bbwe\winget.exe"
     if ($ResolveWingetPath){
            $WingetPath = $ResolveWingetPath[-1].Path
