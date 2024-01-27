@@ -1,5 +1,7 @@
 # Dell Command Update Automation Project
 
+- It looks like DCU might by default roll out on dell computers, not sure how to check as ninja console is weird about this, also hard to real time check uninstallation + reinstallation with admin priveledges being what they are
+
 ## Overview
 
 This repository contains scripts and configurations for automating the deployment, configuration, and scanning processes using Dell Command | Update (DCU). The project aims to streamline the management of Dell devices within an MSP (Managed Service Provider) environment.
@@ -8,20 +10,24 @@ This repository contains scripts and configurations for automating the deploymen
 
 ### Part 1: Downloading, Installing, and Configuring Dell Command | Update
 
-#### File 1.1: DCU Download and install
+#### File 1: DCU Download and install
 
--`dcu_clean_and_install`: As of now this file needs cleaning and testing, eventually this will be the first script that gets run,
+-`1_dcu_clean_and_install`: As of now this file needs cleaning and testing, eventually this will be the first script that gets run,
 the intention of this script is to check the device for the existance of ANY version of DCU, and if it does not find it install it, if it does find DCU on the device it completely uninstalls and then reinstalls with most up to date version.
 
 The deletion and reinstallation is done to ensure that no files, configuration settings etc. remain on a device --> this script is meant to be run either when a device is first setup for a user to ensure that DCU is on the device, if DCU is directly presenting an error or a major patch comes out to DCU
 
-#### File 1.2: DCU Configuration (Assuming it is already installed)
+#### File 2: DCU Configuration (Assuming it is already installed)
 
-- `dcu_configure.ps1`: Configures DCU CLI settings assuming DCU is already installed. It disables certain notifications, reboots, and user consents.
+- `2_dcu_configure.ps1`: Configures DCU CLI settings. It disables certain notifications, reboots, and user consents.
 
 <strong>Needs work + check with G/M to confirm config</strong>
 
-#### File 2.1: Manual Scan Script
+#### File 2.5 Bios password stuff
+
+- `2.5_dcu_admin_bios.ps1`: This script has handling to fiddle with bios passwords and stuff (I dont know if this is needed // this part of the scripts was largely salvaged from an online script)
+
+#### File 3: Manual Scan Script
 
 - `dcu_scan_manual.ps1`: Manually Initiates a DCU scan with specified update types (bios, firmware, driver) and auto-suspends BitLocker. Decide if scan results exported directly to ninja as custom field or saved to device as part of a file/folder. This is for clients who do not want auto scanning for whatever reason, or if a Tech believe that a scan is needed to check for updates.
 
