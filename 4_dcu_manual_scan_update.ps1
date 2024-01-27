@@ -1,0 +1,1 @@
+# /applyUpdates -updateType=bios,driver,firmware -reboot=disable -outputlog=C:\Users$env:username\Desktop\dcuUpdateLog.log
