@@ -33,9 +33,15 @@ The deletion and reinstallation is done to ensure that no files, configuration s
 
 <strong>NEEDS WORK</strong>
 
-#### File 2.2: Automated Scan Script
+#### File 3.5: Automated Scan Script
 
 - `dcu_scan_automated.ps1`:automated version of the above script --> timing can be configured either in DCU configure (if this is the case there is a chance we dont need this file or its purpose changes from DOING the scan and the rest to simply processing the results) or Ninja depending 
+
+<strong>NEEDS WORK</strong>
+
+### File 4: Automated Scan Script
+
+- `4_dcu_manual_scan_update.ps1`:manually trigger a scan and then update if there are updates (this is intended to be used after tech confirms existance of updates pending via automated or manual scan (file 3/3.5))
 
 <strong>NEEDS WORK</strong>
 
