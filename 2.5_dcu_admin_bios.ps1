@@ -1,5 +1,7 @@
 #needs testing to see if it works
 
+#will need to ensure security on this or similar scripts 100% --> this is something I am not 100% sure about
+
 powershell -NoProfile -NonInteractive -Command "Uninstall-Module DellBiosProvider"  -AllVersions -force
 
 Install-PackageProvider Nuget -Force; 
