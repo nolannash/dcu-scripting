@@ -1,3 +1,5 @@
+#this file might no longer be needed, if possible we could set the above script to run on a set timeframe and ALSO have it be run manually
+
 $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
 
 # Check if DCU CLI is installed

@@ -5,6 +5,8 @@ reg add HKLM\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG\ 
 # DCU CLI configuration (assuming it is already installed)
 $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
 
+#the configuration is one of the largest parts that needs clarification --> are we exporting? doing it per client? what is the policy on this 
+
 if (Test-Path -Path $dcuCliPath -PathType Leaf) {
     Start-Process $dcuCliPath -Argumentlist '/configure -updatesNotification=Disable' -WindowStyle hidden -Wait
     # Start-Process $dcuCliPath -Argumentlist '/configure -scheduleAction=DownloadInstallAndNotify' -WindowStyle hidden -Wait
