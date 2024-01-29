@@ -14,7 +14,7 @@ if (Test-Path -Path $dcuCliPath -PathType Leaf) {
     Start-Process $dcuCliPath -Argumentlist '/configure -userConsent=disable' -WindowStyle hidden -Wait
     Start-Process $dcuCliPath -Argumentlist '/configure -autoSuspendBitLocker=enable' -WindowStyle hidden -Wait
 
-    Write-Host "Dell Command Update has been configured."
+    Write-Host "Dell Command Update has been configured." -ForegroundColor Green
 } else {
-    Write-Host "DCU CLI not found. Please check if Dell Command Update is installed."
+    Write-Host "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Red
 }

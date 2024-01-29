@@ -10,13 +10,26 @@ if (Test-Path $DcuCliPath -PathType Leaf) {
         Start-Process -FilePath $DcuCliPath -ArgumentList "/version" -Wait -ErrorAction Stop
         Write-Host "Dell Command Update CLI is running properly." -ForegroundColor Green
 
-        # Run a scan using dcu-cli.exe
-        Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver -autoSuspendBitLocker=enable" -Wait -ErrorAction Stop
-        Write-Host "Scan completed successfully." -ForegroundColor Green
+        # Run separate scans for each update type
+        $updateTypes = @("bios", "firmware", "driver")
+        $updatesFound = $false
 
-####this is where I am currently stuck -- need to make elevated (but if I run as admin do I need to elevate?)
+        foreach ($type in $updateTypes) {
+            $scanResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$type -autoSuspendBitLocker=enable" -Wait -PassThru
+            $updatesFound = $updatesFound -or ($scanResult.ExitCode -eq 1)
+        
+            # Set Ninja custom field based on updates found
+            $ninjaProperty = "dcu_pending_${type}_updates"
+            Ninja-Property-Set $ninjaProperty ($scanResult.ExitCode -eq 1)
+        }
 
-        #create/export to ninja custom field
+        if ($updatesFound) {
+            Write-Host "Updates found. Ninja custom fields have been set." -ForegroundColor Green
+        } else {
+            Write-Host "No updates found." -ForegroundColor Green
+        }
+
+        # Set Ninja custom field "last_dcu_scan" with today's date and time
         $now = Get-Date
         $formattedDateTime = $now.ToString("dd/MM/yyyy [HH:mm:ss]")
         Ninja-Property-Set last_dcu_scan "$formattedDateTime"
