@@ -1,0 +1,1 @@
+#script to install only bios updates --> need to check bios permission stuff before this specific ones get m,
