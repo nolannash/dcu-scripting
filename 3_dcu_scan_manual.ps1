@@ -17,12 +17,12 @@ if (Test-Path $DcuCliPath -PathType Leaf) {
         # Ninja-Property-Set last_dcu_scan "$formattedDateTime"
 
         # Specify the path to save the log file (use date as unique ID)
-        $LogFilePath = "C:\weeklyLogs\$($now.ToString('yyyy-MM-dd_hh-mm'))_dcuUpdateLog.log"
+        $LogFilePath = "C:\weeklyLogs\$($now.ToString('dd-MM-yyyy_hh-mm'))_dcuUpdateLog.log"
 
         # Save the output of the scan to the specified log file
         Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver,application" -NoNewWindow -RedirectStandardOutput $LogFilePath -Wait -ErrorAction Stop 
         # Display a message indicating the log file is saved
-        Write-Host "Scan completed Successfully" -ForgroundColor Cyan
+        Write-Host "`nScan completed Successfully" -ForgroundColor Cyan
         Write-Host "Log file saved to $LogFilePath" -ForegroundColor Green
     } catch {
         # Display an error message if an exception occurs during the process

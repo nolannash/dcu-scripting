@@ -1,7 +1,7 @@
 --> taken from automated scan file
 
-<!-- # $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
- $weeklyLogsFolder = "C:\WeeklyLogs"  # Change the path to your preferred location
+<!--  $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
+ $weeklyLogsFolder = "C:\WeeklyLogs"   Change the path to your preferred location
 
  Check if DCU CLI is installed
  if (Test-Path -Path $dcuCliPath -PathType Leaf) {
@@ -9,7 +9,7 @@
      $elevated = ([Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544"
     
      if (-not $elevated) {
-         # Restart the script with elevated privileges
+          Restart the script with elevated privileges
          Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$($MyInvocation.MyCommand.Path)`"" -Verb RunAs
          Exit
      }
@@ -53,27 +53,27 @@
 if ($WingetCommand) {
     Write-Host "winget.exe found. Proceeding with Dell Command Update operations..." -ForegroundColor Green
 
-    # Check if Dell Command Update is installed
+     Check if Dell Command Update is installed
     $DcuInstalled = Test-Path -Path "C:\Program Files\Dell\CommandUpdate"
 
     if ($DcuInstalled) {
         Write-Host "Dell Command Update found. Uninstalling and installing the latest version..." -ForegroundColor Green
         
-        # Uninstall Dell Command Update
+         Uninstall Dell Command Update
         Start-Process "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe" -ArgumentList '/uninstall' -Wait -WindowStyle hidden
         
-        # Install the latest version using winget
+         Install the latest version using winget
         Start-Process $WingetCommand.Path -ArgumentList 'install --name Dell.CommandUpdate.Universal --force' -Wait -WindowStyle hidden
     } else {
         Write-Host "Dell Command Update not found. Installing the latest version..." -ForegroundColor Yellow
         
-        # Install the latest version using winget
+         Install the latest version using winget
         Start-Process $WingetCommand.Path -ArgumentList 'install --name Dell.CommandUpdate.Universal --force' -Wait -WindowStyle hidden
     }
 
     Write-Host "Dell Command Update removal and installation completed." -ForegroundColor Green
 
-    #set ninja custom field value
+    set ninja custom field value
     Ninja-Property-Set dcu_installed 'true'
 
     $now = Get-Date
@@ -95,13 +95,13 @@ reg add HKLM\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG\ 
  DCU CLI configuration (assuming it is already installed)
 $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
 
-#the configuration is one of the largest parts that needs clarification --> are we exporting? doing it per client? what is the policy on this 
+the configuration is one of the largest parts that needs clarification --> are we exporting? doing it per client? what is the policy on this 
 
 <!-- if (Test-Path -Path $dcuCliPath -PathType Leaf) {
     Start-Process $dcuCliPath -Argumentlist '/configure -updatesNotification=Disable' -WindowStyle hidden -Wait
-    # Start-Process $dcuCliPath -Argumentlist '/configure -scheduleAction=DownloadInstallAndNotify' -WindowStyle hidden -Wait
+     Start-Process $dcuCliPath -Argumentlist '/configure -scheduleAction=DownloadInstallAndNotify' -WindowStyle hidden -Wait
     Start-Process $dcuCliPath -Argumentlist '/configure -reboot=disable' -WindowStyle hidden -Wait
-    # Start-Process $dcuCliPath -Argumentlist '/configure -scheduleWeekly=Tue,13:45' -WindowStyle hidden -Wait
+     Start-Process $dcuCliPath -Argumentlist '/configure -scheduleWeekly=Tue,13:45' -WindowStyle hidden -Wait
     Start-Process $dcuCliPath -Argumentlist '/configure -updatesNotification=Disable' -WindowStyle hidden -Wait
     Start-Process $dcuCliPath -Argumentlist '/configure -userConsent=disable' -WindowStyle hidden -Wait
     Start-Process $dcuCliPath -Argumentlist '/configure -autoSuspendBitLocker=enable' -WindowStyle hidden -Wait
@@ -110,3 +110,34 @@ $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
 } else {
     Write-Host "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Red
 } --> 
+
+
+---> taken from 4.5
+ script to install only application updates --> need to check application permission stuff before this specific ones get 
+ $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
+ if (Test-Path $dcuCliPath -PathType Leaf) {
+     Write-Host "Dell Command Update CLI found. Scanning for application update..." -ForegroundColor Green
+
+      Run a application update scan
+     $scanResult = Start-Process -FilePath $dcuCliPath -ArgumentList '/scan -updateType=application ' -Wait -NoNewWindow
+
+     if ($scanResult.ExitCode -ne 0) {
+         Write-Host "`nPossible application update found. `nApplying application update..." -ForegroundColor Green -NoNewWindow
+
+         $now = Get-Date
+         $formattedDateTime = $now.ToString("dd/MM/yyyy [HH:mm:ss]")
+          Ninja-Property-Set last_application_scan "$formattedDateTime"
+
+          Specify the path to save the log file (use date as unique ID)
+         $LogFilePath = "C:\weeklyLogs\$($now.ToString('dd-MM-yyyy_hh-mm'))_DCU_application_Log.log"
+
+          Apply application update without reboot
+         Start-Process -FilePath $dcuCliPath -ArgumentList "/applyUpdates -updateType=application -reboot=disable " -Wait -RedirectStandardOutput $LogFilePath
+
+         Write-Host "application update applied successfully." -ForegroundColor Green
+     } else {
+         Write-Host "`nNo application update found." -ForegroundColor Yellow
+     }
+ } else {
+     Write-Host "Error: Dell Command Update CLI (dcu-cli.exe) not found at $dcuCliPath." -ForegroundColor Red
+ }
