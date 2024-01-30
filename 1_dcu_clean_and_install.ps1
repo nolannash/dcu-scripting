@@ -1,10 +1,11 @@
+# Check if winget.exe is available on the system
 $WingetCommand = Get-Command -Name winget.exe -ErrorAction SilentlyContinue
 
 if ($WingetCommand) {
     Write-Host "winget.exe found. Proceeding with Dell Command Update operations..." -ForegroundColor Green
 
     try {
-        # Check if Dell Command Update is installed
+        # Check if Dell Command Update is already installed
         $DcuInstalled = Test-Path -Path "C:\Program Files\Dell\CommandUpdate"
 
         if ($DcuInstalled) {
@@ -24,14 +25,18 @@ if ($WingetCommand) {
 
         Write-Host "Dell Command Update removal and installation completed." -ForegroundColor Green
 
-        # Set Ninja custom field values
+        # Set Ninja custom field values for successful installation
         Ninja-Property-Set dcu_installed 'true'
 
+        # Get the current date and time and format it
         $now = Get-Date
         $formattedDateTime = $now.ToString("dd/MM/yyyy [HH:mm:ss]") 
+
+        # Set Ninja custom field with the installation timestamp
         Ninja-Property-Set last_dcu_install "$formattedDateTime"
     }
     catch {
+        # Handle errors during installation
         Write-Host "Error: $_" -ForegroundColor Red
 
         # Set Ninja custom field values on error
@@ -42,4 +47,5 @@ if ($WingetCommand) {
     Write-Host "winget.exe not found. Please ensure that it is installed and included in the system PATH." -ForegroundColor Red
 }
 
+# Pause to keep the PowerShell window open for manual inspection
 Pause

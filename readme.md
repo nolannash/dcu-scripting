@@ -1,55 +1,60 @@
 # Dell Command Update Automation Project
 
-- It looks like DCU might by default roll out on dell computers, not sure how to check as ninja console is weird about this, also hard to real time check uninstallation + reinstallation with admin priveledges being what they are
-
 ## Overview
 
-This repository contains scripts and configurations for automating the deployment, configuration, and scanning processes using Dell Command | Update (DCU). The project aims to streamline the management of Dell devices within an MSP (Managed Service Provider) environment.
+This repository contains scripts and configurations for automating the deployment, configuration, and scanning processes using Dell Command | Update (DCU). The project aims to streamline the management of Dell devices within an MSP (Managed Service Provider) environment. For best results scripts should be run as administrator
 
 ## Project Structure
 
 ### Part 1: Downloading, Installing, and Configuring Dell Command | Update
 
-#### File 1: DCU Download and install
+#### File 1: DCU Download and Install
 
--`1_dcu_clean_and_install`: As of now this file needs cleaning and testing, eventually this will be the first script that gets run,
-the intention of this script is to check the device for the existance of ANY version of DCU, and if it does not find it install it, if it does find DCU on the device it completely uninstalls and then reinstalls with most up to date version.
+- `1_dcu_clean_and_install`: This script requires testing to ensure functionality. It is intended to be the first script to run. The purpose is to check the device for the existence of ANY version of DCU. If it does not find it, it installs it. If it finds DCU on the device, it completely uninstalls and then reinstalls with the most up-to-date version. The deletion and reinstallation ensure that no files, configuration settings, etc., remain on a device. This script is meant to be run either when a device is first set up for a user to ensure that DCU is on the device, if DCU is directly presenting an error, or a major patch comes out to DCU. **Should be functional, but needs testing**
 
-The deletion and reinstallation is done to ensure that no files, configuration settings etc. remain on a device --> this script is meant to be run either when a device is first setup for a user to ensure that DCU is on the device, if DCU is directly presenting an error or a major patch comes out to DCU
+### Part 2 Configuring Dell Command | Update
 
 #### File 2: DCU Configuration (Assuming it is already installed)
 
-- `2_dcu_configure.ps1`: Configures DCU CLI settings. It disables certain notifications, reboots, and user consents.
+- `2_dcu_configure.ps1`: Configures DCU CLI settings. It disables certain notifications, reboots, and user consents. **Needs further testing and confirmation with G/M to ensure configuration accuracy.**
 
-<strong>Needs work + check with G/M to confirm config</strong>
+#### File 2.5: BIOS Password Management
 
-#### File 2.5 Bios password stuff
+- `2.5_dcu_admin_bios.ps1`: This script handles BIOS passwords and related configurations. Please note that this part of the script was salvaged from an online source. **Needs review and testing.**
 
-- `2.5_dcu_admin_bios.ps1`: This script has handling to fiddle with bios passwords and stuff (I dont know if this is needed // this part of the scripts was largely salvaged from an online script)
+### Part 3 Using Dell Command | Update to scan for updates
 
 #### File 3: Manual Scan Script
 
-- `dcu_scan_manual.ps1`: Manually Initiates a DCU scan with specified update types (bios, firmware, driver) and auto-suspends BitLocker. Decide if scan results exported directly to ninja as custom field or saved to device as part of a file/folder. This is for clients who do not want auto scanning for whatever reason, or if a Tech believe that a scan is needed to check for updates.
-
-<strong>NEEDS WORK</strong>
+- `3_dcu_scan_manual.ps1`: Manually initiates a DCU scan with specified update types (bios, firmware, driver) and auto-suspends BitLocker. scan results should be exported directly to Ninja as a custom field and saved to the device as part of a file/folder. This script is for clients who do not want auto-scanning or if a tech believes that a scan is needed to check for updates. Can also be set to run on a timer to create automation. Custom fields in ninja will be created to show scan status/timing/any updates found **Might need further work.**
 
 #### File 3.5: Automated Scan Script
 
-- `dcu_scan_automated.ps1`:automated version of the above script --> timing can be configured either in DCU configure (if this is the case there is a chance we dont need this file or its purpose changes from DOING the scan and the rest to simply processing the results) or Ninja depending 
+- `dcu_scan_automated.ps1`: This script might be redundant as script 3 can be run both manually or on a set schedule outlined either in ninja console or configuration of DCU **Awaiting confirmation of 3.0 success/failure**
 
-<strong>NEEDS WORK</strong>
+### Part 4
 
-### File 4: Automated Scan Script
+### File 4.1: Update All
 
-- `4_dcu_manual_scan_update.ps1`:manually trigger a scan and then update if there are updates (this is intended to be used after tech confirms existance of updates pending via automated or manual scan (file 3/3.5))
+- `4.1_dcu_update_all.ps1`: Updates all components using DCU. **Needs further work.**
 
-<strong>NEEDS WORK</strong>
+### File 4.2: Update BIOS
 
-#### File (?): Automated Export of Scan Results to Ninja 
+- `4.2_dcu_update_bios.ps1`: Updates the BIOS using DCU. **Needs further work.**
 
-- `does not exist yet`:May not be needed, but potential positon for a script acting in the middle of the scan, its results, where those are stored and how those results are brought to and displayed in the Ninja Console
+### File 4.3: Update Firmware
 
-#### File 3.1: Application of Updates + Reboot Management 
-- `does not exist yet`: similar to step 2/file 2 there is the posibility of slightly simplifying this in the sense that we can automate via the configuration a {time frame} scan then update application and reboot on whatever date and time is wanted however that is harder to configure than having ninja manage the timing. 
-Manual version will essentiall just be a second scan and application of updates (with or without reboot not sure) that can be triggered remotely --> ninja might even be able to just have that be the one that gets run on automated timer as part of scanning and updating AND also use it as the manual case by case version.
+- `4.3_dcu_update_firmware.ps1`: Updates firmware using DCU. **Needs further work.**
+
+### File 4.4: Update Drivers
+
+- `4.4_dcu_update_drivers.ps1`: Updates drivers using DCU. **Needs further work.**
+
+### File 4.5: Update Applications
+
+- `4.5_dcu_update_applications.ps1`: Updates applications using DCU. **Needs further work.**
+
+### Additional Notes/Content
+
+
 

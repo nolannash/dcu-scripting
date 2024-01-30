@@ -3,11 +3,13 @@ $DcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
 
 # Check if dcu-cli.exe exists
 if (Test-Path $DcuCliPath -PathType Leaf) {
+    # Display a message indicating the detection of Dell Command Update CLI
     Write-Host "Dell Command Update CLI found. Proceeding with operations..." -ForegroundColor Green
 
     try {
         # Start dcu-cli.exe to check if it runs properly
         Start-Process -FilePath $DcuCliPath -ArgumentList "/version" -Wait -ErrorAction Stop
+        # Display a message indicating that Dell Command Update CLI is running properly
         Write-Host "Dell Command Update CLI is running properly." -ForegroundColor Green
 
         # Run separate scans for each update type
@@ -15,17 +17,19 @@ if (Test-Path $DcuCliPath -PathType Leaf) {
         $updatesFound = $false
 
         foreach ($type in $updateTypes) {
+            # Run a scan for a specific update type
             $scanResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$type -autoSuspendBitLocker=enable" -Wait -PassThru
-            $updatesFound = $updatesFound -or ($scanResult.ExitCode -eq 1)
-        
-            # Set Ninja custom field based on updates found
+            # Update a Ninja custom field based on updates found
             $ninjaProperty = "dcu_pending_${type}_updates"
             Ninja-Property-Set $ninjaProperty ($scanResult.ExitCode -eq 1)
+            $updatesFound = $updatesFound -or ($scanResult.ExitCode -eq 1)
         }
 
         if ($updatesFound) {
+            # Display a message if updates are found, and Ninja custom fields have been set
             Write-Host "Updates found. Ninja custom fields have been set." -ForegroundColor Green
         } else {
+            # Display a message if no updates are found
             Write-Host "No updates found." -ForegroundColor Green
         }
 
@@ -34,18 +38,21 @@ if (Test-Path $DcuCliPath -PathType Leaf) {
         $formattedDateTime = $now.ToString("dd/MM/yyyy [HH:mm:ss]")
         Ninja-Property-Set last_dcu_scan "$formattedDateTime"
 
-        # Specify the path to save the log file
-        $LogFilePath = "C:\weeklyLogs\dcuUpdateLog.log"
+        # Specify the path to save the log file (use date as unique ID)
+        $LogFilePath = "C:\weeklyLogs\$($now.ToString('yyyyMMdd'))_dcuUpdateLog.log"
 
         # Save the output of the scan to the specified log file
         Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver -autoSuspendBitLocker=enable" -RedirectStandardOutput $LogFilePath -Wait -ErrorAction Stop
-
+        # Display a message indicating the log file is saved
         Write-Host "Log file is saved to $LogFilePath" -ForegroundColor Green
     } catch {
+        # Display an error message if an exception occurs during the process
         Write-Host "Error: $_" -ForegroundColor Red
     }
 } else {
+    # Display an error message if Dell Command Update CLI is not found
     Write-Host "Error: Dell Command Update CLI (dcu-cli.exe) not found at $DcuCliPath." -ForegroundColor Red
 }
 
+# Pause to keep the PowerShell window open for manual inspection
 Pause
