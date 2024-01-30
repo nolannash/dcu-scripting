@@ -1,6 +1,6 @@
 #script to install only bios updates --> need to check bios permission stuff before this specific ones get 
 if (Test-Path $dcuCliPath -PathType Leaf) {
-    Write-Host "Dell Command Update CLI found. Proceeding with BIOS update..." -ForegroundColor Green
+    Write-Host "Dell Command Update CLI found. Scanning for BIOS update..." -ForegroundColor Green
 
     # Run a BIOS update scan
     $scanResult = Start-Process -FilePath $dcuCliPath -ArgumentList '/scan -updateType=bios -autoSuspendBitLocker=enable' -Wait -PassThru

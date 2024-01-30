@@ -18,14 +18,14 @@ if (Test-Path $DcuCliPath -PathType Leaf) {
 
         # Run a scan for a specific update type or for all types
         $scanResult = if ($UpdateType -eq "all") {
-            Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver -autoSuspendBitLocker=enable" -Wait -PassThru
+            Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver " -Wait -PassThru -WindoStyle hidden 
         } else {
-            Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$UpdateType -autoSuspendBitLocker=enable" -Wait -PassThru
+            Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$UpdateType " -Wait -PassThru
         }
 
         # Update a Ninja custom field based on updates found
-        $ninjaProperty = "dcu_${UpdateType}_updates_installed"
-        Ninja-Property-Set $ninjaProperty ($scanResult.ExitCode -eq 1)
+        # $ninjaProperty = "dcu_${UpdateType}_updates_installed"
+        # Ninja-Property-Set $ninjaProperty ($scanResult.ExitCode -eq 1)
 
         if ($scanResult.ExitCode -eq 1) {
             # Display a message if updates are found, and Ninja custom field has been set
@@ -42,7 +42,7 @@ if (Test-Path $DcuCliPath -PathType Leaf) {
         # Set custom field "last_dcu_scan" with today's date and time
         $now = Get-Date
         $formattedDateTime = $now.ToString("dd/MM/yyyy [HH:mm:ss]")
-        Ninja-Property-Set last_dcu_scan "$formattedDateTime"
+        # Ninja-Property-Set last_dcu_scan "$formattedDateTime"
     } catch {
         # Display an error message if an exception occurs during the process
         Write-Host "Error: $_" -ForegroundColor Red
