@@ -8,6 +8,9 @@ $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
 
 # Check if DCU CLI is installed
 if (Test-Path -Path $dcuCliPath -PathType Leaf) {
+
+    #these can all be done as a single line but they are separated for now for visibility 
+
     # Disable update notifications
     Start-Process $dcuCliPath -Argumentlist '/configure -updatesNotification=Disable' -WindowStyle hidden -Wait
 
