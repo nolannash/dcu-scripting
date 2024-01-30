@@ -1,154 +1,17 @@
 <Strong>THIS IS A COPY PASTE FROM A REDDIT THREAD, I STILL NEED TO READ THROUGH THIS </Strong>
 
-
-
-support assist
-Install or Upgrade Dell Command Update for Windows (EITHER Universal or Not!)
-David Szpunar
-OP
- — 11/11/2023 1:13 PM
-This is a little less complete and clean as I'd prefer because Dell seems to make it difficult to both publicly download from a script and also to extract/use their download directly (unless I'm missing something, maybe it's easier than I made it!) but it works pretty darned reliably to both install and to upgrade/remove older versions of DCU if you repackage both the Universal and Non-Universal Dell Command Update installers as described in the very detailed directions at the top of the script and make them available to download by the script.
-
-The current version of Dell Command Update is 5.1.0 as of this writing. Download links are provided in the script to get them yourself, extract and repackage easily for this install. The installers (Zip and the extracted folder) are deleted from the system after being used by the script on each run. I started with version 4.9.0 and updated to 5.1.0 and it was quite straightforward to repackage and change just the variable in the script to work with the new version!
-
--Uninstall is there but only very slightly tested, but the top of the script has links to the arguments and you're welcome to figure it out better. NinjaRMM also seems to uninstall Dell Command Update from the Software Inventory quite well.
-
-Use the -ForceDell flag or Script Variable to not quit if Dell hardware isn't detected (the default behavior) and try to install anyway, since sometimes the hardware detection is wrong.
-
-This script does NOT do any DCU configuration or updating of the system using Dell Command Update. It ONLY installs or in-place upgrades the Dell Command Update application itself! There's other documentation from Dell to schedule or force installs of updates periodically once DCU is installed!
-
-Also note that version 4.9.0 was an updated that fixed a major security hole in prior versions, so removing or upgrading to 4.9.0 or later is strongly recommended from a security standpoint.
-#Requires -Version 5.1
-<#
-.SYNOPSIS
-    Install or Update the latest Dell Command Update version silently, but only on Dell systems.
-.DESCRIPTION
-    Install or Update the latest Dell Command Update version silently, but only on Dell systems. See Notes for detailed file prep 
-    instructions required before running! You MUST host repackaged Dell installers yourself per the directions provided! In testing, 
-    it removes all prior versions of Dell Command Update, but upgrades to the same type (Universal or Non-Universal) as what was 
-    installed, if there's already an installation (hence why prepare both, since various machines seem to have various versions 
-    already installed and one installer won't upgrade the opposite previous version!).
-.EXAMPLE
-    (No Parameters)
-
-    Prints basic status, any old version that's being removed during upgrade, and the output result code (0 is success, sometimes also 
-    indicates a reboot is required to complete the installation).
-
-.PARAMETER: Uninstall
-    TODO: Uninstall Dell Command Update if installed (redimentary implementation, may not work)
-
-.PARAMETER: ForceDell
-    Attempt to install even if the detected hardware is not Dell based on motherboard type query.
-.EXAMPLE
-    Uninstall
-    
-    Attempt run the uninstall silently command on the Dell Command Update install EXE to remove itself. Not sure if it works, 
-    tested only on a very old (2.x) version and it said there wasn't any matching app, but it's pretty good at removing all old 
-    versions to install the new. Also, NinjaRMM's Software Inventory has properly Uninstalled most versions of DCU when using the 
-    Uninstall command!
-
-    Dell's uninstall directions: https://www.dell.com/support/manuals/en-us/command-update/dellcommandupdate_ug/uninstall-dell-command-%7C-update?guid=guid-35122cc1-21de-4ed6-a28f-709d2fce7df1&lang=en-us
-    and https://www.dell.com/support/manuals/en-us/command-update/dellcommandupdate_ug/uninstall-dell-command-%7C-update?guid=guid-35122cc1-21de-4ed6-a28f-709d2fce7df1&lang=en-us
-.OUTPUTS
-    Basic status of actions taken are printed.
-.NOTES
-    2023-11-10 - Updated for 5.1.0, changed -ForceDell to switch from string, added Switch Variables support
-    2023-06-26 - Initial version for 4.9.0 (unreleased)
-    
-    HOW TO PREPARE INSTALLTION FILES (because Dell doesn't make it easy to get the installers and I've repackaged them for easy unzipping):
-    1. Download Dell Command Update installers for both the Universal and non-Universal versions from:
-    https://www.dell.com/support/home/en-us/product-support/product/optiplex-3060-sff/drivers choose Windows 10, 64-bit, expand to show more, 
-        locate the "Dell Command | Update Windows Universal Application" entry:
-        https://www.dell.com/support/home/en-us/drivers/driversdetails?driverid=jcvw3&oscode=wt64a&productcode=optiplex-3060-sff
-            (downloaded file is Dell-Command-Update-Windows-Universal-Application_JCVW3_WIN_5.1.0_A00.EXE)
-        Then locate the "Dell Command | Update Application" entry:
-        https://www.dell.com/support/home/en-us/drivers/driversdetails?driverid=44th5&oscode=wt64a&productcode=optiplex-3060-sff
-            (downloaded file is Dell-Command-Update-Application_44TH5_WIN_5.1.0_A00.EXE)
-
-    2. Download the .exe installers for the Universal and Non-Universal options above, both, to a local folder. Create two folders next to 
-    these files, one for the Universal version and one for the non-Universal version, with these names:
-        DCU_5.1.0
-        DCU_5.1.0-NonUniversal
-    
-    3. Double-click each of the above files, click the Extract button, and choose the folder above corresponding with each. These instructions 
-    should work with most newer versions by changing just the version number; I started with 4.9.0 and the only change was the new installers 
-    and the corresponding $current_version variable in the script being changed to match to get 5.1.0 to work.
-
-    4. Right-click one at a time on each of the above folders with the extracted contents, and choose Compress to Zip to make a zip file named 
-    the same as the folder, with Windows defaults. The files inside should be untouched from extraction.
-
-    5. Upload these two Zip files to the same folder on an HTTPS-accessible storage that's accessible from the systems running this script.
-
-    6. Change the $download_source variable below to the HTTPS path of the two zip files, leaving the $current_version embedded 
-    in the filename and specifying the Universal version (the non-Universal path will be inferred by the script as long as you 
-    named the files properly). Like so:
-        $download_source = "https://YOURSERVER.com/YOURPATH/DellCommandUpdate\DCU_$current_version.zip";
-    
-    7. Save this script to NinjaRMM as an Automation and optionally set Script Variables checkboxes for the ForceDell and Uninstall switches.
-        (The ForceDell switch will try to install even if the system doesn't specify Dell as the manufacturer, which happens occasionally, and 
-        the Uninstall switch will try to uninstall the app, see notes above about this being best-effort and mostly untested.)
-    
-    8. Run the script on systems to install the application, removing any old versions of Dell Command Update in the process (it hasn't 
-    ever not worked on any particular version I've seen, back to 2.x). There's no reason this couldn't be run manually on a local 
-    machine if preferred or to test.
-#>
-
-[CmdletBinding()]
-param (
-    [Parameter()][switch] $Uninstall,
-    [Parameter()][switch] $ForceDell
-)
-
-begin {
-    # Cleanup from ImmyBot:
-    ##This section was added in order to help "fix" bad factory installs that would actually prevent new/updated DCU installs from working.
-    ## Unsure if the problem is the files in this folder or the permissions, but deleting this entire folder allowed the installation to succeed when it previously failed.
-    $UpdateServicePath = "$($env:ProgramData)\Dell\UpdateService"
-    if (Test-Path $UpdateServicePath) {
-        Remove-Item -Path $UpdateServicePath -Force -Recurse -ErrorAction SilentlyContinue
-    }
-
-
-    $current_version = '5.1.0'
-    # Replace the entire URL below with your URL to the .zip file, but it MUST be in the format below.
-    # You must download the installer, extract it, then zip the installer back up with subfolders as-is for it to work.
-    # The non-Universal same version should be unpacked, re-zipped, and uploaded to the same folder with -NonUniversal.zip 
-    # as the end of the file. The .exe files inside will differ, but keep them the same as Dell does and the script 
-    # will handle them properly.
-    $download_source = "https://[REPLACE_WITH_YOUR_HOSTNAME]/installers/DellCommandUpdate\DCU_$current_version.zip";
-
-    $ScriptExitCode = 0 # Default exit code unless error
-... (249 lines left)
-Collapse
-Deploy-Update-DellCommandUpdate-Sharable.ps1
-18 KB
-David Szpunar
-OP
- — 11/15/2023 8:39 AM
-Note: it looks like there's a script on the Ninja Dojo to use Dell Command Update to actually trigger an update scan, or an update/install/reboot, which should work well after DCU is installed. I haven't tested it but it looks great! See https://ninjarmm.zendesk.com/hc/en-us/community/posts/14132555849613-Dell-Command-Update-My-Approach
+https://ninjarmm.zendesk.com/hc/en-us/community/posts/14132555849613-Dell-Command-Update-My-Approach
 
 Additionally, a specific script to use DCU to check if BIOS updates are available and store the status in custom fields: https://ninjarmm.zendesk.com/hc/en-us/community/posts/4413851131277-Find-out-if-your-Dell-has-an-available-BIOS-update
 
 A script to force Dell firmware updates with DCU: https://ninjarmm.zendesk.com/hc/en-us/community/posts/4412740022285-Dell-Firmware-Updates-Script
 
 These are all linked from the Script Share: Patch Management scripts overview table at https://ninjarmm.zendesk.com/hc/en-us/articles/360057899071 
-Wisecompany — 11/17/2023 10:25 AM
-I've got a clean approach to this if you're interested. Should always grab the latest DCU, no staging necessary.
+
 
 https://scripts.aaronjstevenson.com/device-management/updates/dell-command-update
-Dell Command Update
-PowerShell script to silently install and run Dell Command Update (DCU).
-Dell Command Update
-To be clear, my script installs DCU (if missing), configures automatic updates with DCU, and installs all available DCU updates without a reboot.
-I generally take the approach of always install all updates and fix potential issues that arise, rather than waiting to install updates. Adjust as necessary based on your approach.
-David Szpunar
-OP
- — 11/17/2023 11:17 AM
-That looks awesome, thanks! I figured it was possible but didn't get as far as figuring it out :-)
-Not clear on first look if yours works if either the Universal or Non-Universal is already installed, but otherwise yours looks excellent and maybe I'll switch :-)
-Wisecompany — 11/17/2023 11:18 AM
-It does. It will also remove Dell Update (a separate, incompatible product) if it is detected.
-Here's the portion that detects the correct download URL, if you're interested.
+
+
 function Get-DownloadURL {
   $DellURL = 'https://www.dell.com/support/kbdoc/en-us/000177325/dell-command-update'
   $Headers = @{ 'accept' = 'text/html' }
