@@ -1,24 +1,25 @@
-#script to install ALL updates regardless of type 
-#need to confirm reboot situation with Greg and Michael 
 $dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
+$updateTypes = @("bios", "firmware", "driver", "application")  # Add more types as needed
 
 if (Test-Path $dcuCliPath -PathType Leaf) {
-    Write-Host "Dell Command Update CLI found. Proceeding with BIOS update..." -ForegroundColor Green
+    Write-Host "Dell Command Update CLI found. Proceeding with updates..." -ForegroundColor Green
 
-    # Run a BIOS update scan
-    $scanResult = Start-Process -FilePath $dcuCliPath -ArgumentList '/scan -updateType=bios -autoSuspendBitLocker=enable' -Wait -PassThru
+    foreach ($type in $updateTypes) {
+        # Run a scan for a specific update type
+        $scanResult = Start-Process -FilePath $dcuCliPath -ArgumentList "/scan -updateType=$type -autoSuspendBitLocker=enable" -Wait -PassThru
 
-    if ($scanResult.ExitCode -eq 1) {
-        Write-Host "BIOS update found. Applying BIOS update..." -ForegroundColor Green
+        if ($scanResult.ExitCode -eq 1) {
+            Write-Host "Updates found for $type. Applying updates..." -ForegroundColor Green
 
-        # Apply BIOS update without reboot
-        Start-Process -FilePath $dcuCliPath -ArgumentList "/applyUpdates -updateType=bios -reboot=disable -outputlog=C:\Users\$env:username\Desktop\dcuUpdateLog.log" -Wait
+            # Apply updates for a specific type without reboot
+            Start-Process -FilePath $dcuCliPath -ArgumentList "/applyUpdates -updateType=$type -reboot=disable -outputlog=C:\Users\$env:username\Desktop\dcuUpdateLog_$type.log" -Wait -NoNewWindow -WindowStyle Hidden
 
-        Write-Host "BIOS update applied successfully." -ForegroundColor Green
-    } else {
-        Write-Host "No BIOS update found." -ForegroundColor Yellow
+            Write-Host "$type updates applied successfully." -ForegroundColor Green
+        } else {
+            Write-Host "No updates found for $type." -ForegroundColor Green
+        }
     }
 } else {
     Write-Host "Error: Dell Command Update CLI (dcu-cli.exe) not found at $dcuCliPath." -ForegroundColor Red
 }
-
+Pause
