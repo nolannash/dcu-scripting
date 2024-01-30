@@ -22,7 +22,7 @@ if (Test-Path $DcuCliPath -PathType Leaf) {
         # Save the output of the scan to the specified log file
         Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver,application" -NoNewWindow -RedirectStandardOutput $LogFilePath -Wait -ErrorAction Stop 
         # Display a message indicating the log file is saved
-        Write-Host "`nScan completed Successfully" -ForgroundColor Cyan
+        Write-Host "Scan completed Successfully" -ForegroundColor Cyan
         Write-Host "Log file saved to $LogFilePath" -ForegroundColor Green
     } catch {
         # Display an error message if an exception occurs during the process
