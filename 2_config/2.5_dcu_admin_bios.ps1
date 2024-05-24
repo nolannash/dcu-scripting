@@ -11,8 +11,8 @@ Import-Module DellBIOSProvider
 # $BPW = Get-Item -Path "DellSmbios:\Security\IsAdminPasswordSet" | Select-Object -ExpandProperty CurrentValue
 If ( $BPW -eq 'False') {
 Set-Item -Path DellSmbios:\Security\AdminPassword "DONT MESS WITH THE PASSWORD"
- write-output "Added" }
- Else {
+    write-output "Added" }
+    Else {
 # Set-Item -Path DellSmbios:\Security\AdminPassword "ADD A PASSWORD HERE" -Password "PASSWORD STUFF GOES HERE"
 
 write-output "changed" }

@@ -2,59 +2,44 @@
 
 ## Overview
 
-This repository contains scripts and configurations for automating the deployment, configuration, and scanning processes using Dell Command | Update (DCU). The project aims to streamline the management of Dell devices within an MSP (Managed Service Provider) environment. For best results scripts should be run as administrator
+This repository contains scripts and configurations for automating the deployment, configuration, and scanning processes using Dell Command | Update (DCU). The project aims to streamline the management of Dell devices within an MSP (Managed Service Provider) environment. For best results scripts should be run as administrator. The scripts also assume you are using the NinjaOneRMM platform, but can be easily modified to ignore that. 
 
 ## Project Structure
 
 ### Part 1: Downloading, Installing, and Configuring Dell Command | Update
 
-#### File 1: DCU Download and Install
+#### Folder 1: `1_install_dcu`
 
-- `1_dcu_clean_and_install`: This script requires testing to ensure functionality. It is intended to be the first script to run. The purpose is to check the device for the existence of ANY version of DCU. If it does not find it, it installs it. If it finds DCU on the device, it completely uninstalls and then reinstalls with the most up-to-date version. The deletion and reinstallation ensure that no files, configuration settings, etc., remain on a device. This script is meant to be run either when a device is first set up for a user to ensure that DCU is on the device, if DCU is directly presenting an error, or a major patch comes out to DCU. **Should be functional, but needs testing**
+- `1_dcu_install_url.ps1`: This script has been lightly tested. It first checks to see if DCU is already installed and then uninstalls it if it is detected. The script uses the download URL of the Command Update installer for the most recent version of Dell Command Update as of 5/24/2024
+- `1.1_dcu_install_s3.ps1`: This script has not been tested, however it is nearly identical in functionality to the first and tested functional installation script. The script is configured to take a link to an installer stored in an AWS S3 bucket instead of pulling from the Dell website
+- `1.2_dcu_install_winget.ps1`: This script has been tested and is currently non-operational. There is an existing winget command to install command update but for an unknown reason it is very tricky to get working
 
 ### Part 2 Configuring Dell Command | Update
 
-#### File 2: DCU Configuration (Assuming it is already installed)
+#### Folder 2: `2_config`
 
-- `2_dcu_configure.ps1`: Configures DCU CLI settings. It disables certain notifications, reboots, and user consents. **Needs further testing and confirmation with G/M to ensure configuration accuracy.**
-
+- `2_dcu_configure.ps1`: Configures DCU CLI settings. It disables certain notifications, reboots, and user consents. *
+  
 #### File 2.5: BIOS Password Management
 
 - `2.5_dcu_admin_bios.ps1`: This script handles BIOS passwords and related configurations. Please note that this part of the script was salvaged from an online source. **Needs review and testing.**
 
-### Part 3 Using Dell Command | Update to scan for updates
+### File 2.1: create logs storage folder
+
+- `2.1_create_logs_storage_folder.ps1`: this takes in a path as a parameter and creates a storage folder at the specified location. This is where all of the logs get stored after scanning
+
+### Folder 3 `3_scans`
 
 #### File 3: Manual Scan Script
 
-- `3_dcu_scan_manual.ps1`: Manually initiates a DCU scan with specified update types (bios, firmware, driver) and auto-suspends BitLocker. scan results should be exported directly to Ninja as a custom field and saved to the device as part of a file/folder. This script is for clients who do not want auto-scanning or if a tech believes that a scan is needed to check for updates. Can also be set to run on a timer to create automation. Custom fields in ninja will be created to show scan status/timing/any updates found **Might need further work.**
+- `3_dcu_scan_all.ps1`: Runs a scan for all possible update types using the CLI. Stores the output to the log storage folder --> path taken from Ninja custom fields. Additionally it is set up to analyze the response code and determine if an update is needed on the device. 
 
-#### File 3.5: Automated Scan Script
-
-- `dcu_scan_automated.ps1`: This script might be redundant as script 3 can be run both manually or on a set schedule outlined either in ninja console or configuration of DCU **Awaiting confirmation of 3.0 success/failure**
-
-### Part 4
+### Folder 4: `4_apply_updates`
 
 ### File 4.1: Update All
 
-- `4.1_dcu_update_all.ps1`: Updates all components using DCU. **Needs further work.**
+- `4.1_dcu_update_no_reboot.ps1`: Runs a scan and then update of all update types that do not require the comptuer to reboot in order to apply. Saves logs to storage folder.  
 
 ### File 4.2: Update BIOS
 
-- `4.2_dcu_update_bios.ps1`: Updates the BIOS using DCU. **Needs further work.**
-
-### File 4.3: Update Firmware
-
-- `4.3_dcu_update_firmware.ps1`: Updates firmware using DCU. **Needs further work.**
-
-### File 4.4: Update Drivers
-
-- `4.4_dcu_update_drivers.ps1`: Updates drivers using DCU. **Needs further work.**
-
-### File 4.5: Update Applications
-
-- `4.5_dcu_update_applications.ps1`: Updates applications using DCU. **Needs further work.**
-
-### Additional Notes/Content
-
-
-
+- `4.2_dcu_update_reboot.ps1`: scans for and applys updates to all update types including those that require a reboot to apply. forcers a reboot after
