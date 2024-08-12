@@ -1,28 +1,55 @@
-# Registry settings to configure Dell Command Update behavior
-# Registry path might need verification
-# reg add HKLM\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG\ /v ShowSetupPopup /t REG_DWORD /d 0 /f
-# reg add HKLM\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG\ /v DCUconfigured /t REG_DWORD /d 1 /f
+# Define registry keys to be modified
+$registryKeys = @{
+    'ShowSetupPopup' = 0
+    'DCUconfigured' = 1
+}
+# The DCUconfigured registry key is used by Dell Command Update (DCU) to track whether the system has been configured by the tool. 
+# Specifically, setting this key to 1 indicates that DCU has completed its configuration on the system. 
+# This configuration could include settings like disabling update notifications, setting update schedules, 
+# or other custom preferences for how DCU manages updates on the device.
 
-# DCU CLI configuration (assuming it is already installed)
-$dcuCliPath = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"
 
-# Check if DCU CLI is installed
-if (Test-Path -Path $dcuCliPath -PathType Leaf) {
 
-    #these can all be done as a single line but they are separated for now for visibility 
+# Specify possible paths where dcu-cli.exe might be located
+$PossibleDcuCliPaths = @(
+    "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe",
+    "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe"
+)
 
-    # Disable update notifications
-    Start-Process $dcuCliPath -Argumentlist '/configure -updatesNotification=Disable' -WindowStyle hidden -Wait
+# Find dcu-cli.exe
+$DcuCliPath = $PossibleDcuCliPaths | Where-Object { Test-Path $_ -PathType Leaf } | Select-Object -First 1
 
-    # Disable reboot after updates
-    Start-Process $dcuCliPath -Argumentlist '/configure -reboot=disable' -WindowStyle hidden -Wait
+if ($DcuCliPath) {
+    try {
+        # Backup current registry values
+        $backupPath = "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG_Backup"
+        if (-not (Test-Path $backupPath)) {
+            New-Item -Path $backupPath -Force | Out-Null
+        }
+        foreach ($key in $registryKeys.Keys) {
+            $currentValue = Get-ItemProperty -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG" -Name $key -ErrorAction SilentlyContinue
+            if ($currentValue) {
+                Set-ItemProperty -Path $backupPath -Name $key -Value $currentValue.$key -Type DWord -Force
+            }
+        }
 
-    # Enable automatic suspension of BitLocker during updates
-    Start-Process $dcuCliPath -Argumentlist '/configure -autoSuspendBitLocker=enable' -WindowStyle hidden -Wait
+        # Update registry values
+        foreach ($key in $registryKeys.Keys) {
+            Set-ItemProperty -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG" -Name $key -Value $registryKeys[$key] -Type DWord -Force
+            Write-Host "Updated registry key: $key = $($registryKeys[$key])"
+        }
 
-    # Display a message indicating successful configuration
-    Write-Host "Dell Command Update has been configured." -ForegroundColor Green
+        # Configure updates notifications
+        $process = Start-Process $DcuCliPath -ArgumentList '/configure -updatesNotification=disable -autoUpdates=disable -userConsent=disable -silent -autoSuspendBitlocker=enable' -NoNewWindow -Wait -PassThru
+        if ($process.ExitCode -eq 0) {
+            Write-Host "Dell Command Update has been configured to disable update notifications." -ForegroundColor Green
+        } else {
+            Write-Host "Error configuring Dell Command Update. Exit code: $($process.ExitCode)" -ForegroundColor Red
+        }
+    }
+    catch {
+        Write-Host "An error occurred: $_" -ForegroundColor Red
+    }
 } else {
-    # Display an error message if DCU CLI is not found
-    Write-Host "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Red
+    Write-Host "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Yellow
 }
