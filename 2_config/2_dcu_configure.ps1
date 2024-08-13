@@ -40,7 +40,7 @@ if ($DcuCliPath) {
         }
 
         # Configure updates notifications
-        $process = Start-Process $DcuCliPath -ArgumentList '/configure -updatesNotification=disable -autoUpdates=disable -userConsent=disable -silent -autoSuspendBitlocker=enable' -NoNewWindow -Wait -PassThru
+        $process = Start-Process $DcuCliPath -ArgumentList '/configure -updatesNotification=disable -scheduleManual -userConsent=disable -silent -autoSuspendBitlocker=enable' -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -eq 0) {
             Write-Host "Dell Command Update has been configured to disable update notifications." -ForegroundColor Green
         } else {
