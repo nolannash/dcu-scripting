@@ -9,15 +9,22 @@ $DcuCliPath = $PossibleDcuCliPaths | Where-Object { Test-Path $_ -PathType Leaf 
 
 if ($DcuCliPath) {
     try {
-        # Define the export directory and ensure it exists
-        $ExportDir = "C:\Users\Nolan\Documents\Code\Dell Command Update\logs_and_exports"
-        if (-not (Test-Path -Path $ExportDir)) {
-            New-Item -Path $ExportDir -ItemType Directory | Out-Null
+        #create timestamp
+        $now = Get-Date -Format 'yyyy-MM-dd_HH-mm'
+        # Check for the log storage location from Ninja
+        $NinjaExportPath = Ninja-Property-Get dcuLogLocation
+        if (-not (Test-Path -Path $NinjaExportPath)) {
+            # If Ninja log location doesn't exist, use default directory
+            $ExportDir = "C:\Users\Nolan\Documents\Code\Dell Command Update\logs_and_exports"
+            if (-not (Test-Path -Path $ExportDir)) {
+                New-Item -Path $ExportDir -ItemType Directory | Out-Null
+            }
+            #use personal location + timestamp
+            $ExportPath = Join-Path $ExportDir "settings_export__1.$now"
+        } else {
+            # Use the Ninja log location + timestamp
+            $ExportPath = Join-Path $NinjaExportPath "settings_export__1.$now"
         }
-
-        # Create a unique file name with a timestamp
-        $Timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
-        $ExportPath = Join-Path $ExportDir "settings_export__1.$Timestamp"
 
         # Construct the arguments string
         $arguments = "/configure -exportSettings=`"$ExportPath`""

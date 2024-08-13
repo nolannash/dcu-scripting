@@ -19,7 +19,7 @@ $DcuCliPath = $PossibleDcuCliPaths | Where-Object { Test-Path $_ -PathType Leaf 
 
 if ($DcuCliPath) {
     try {
-        # Backup current registry values
+# Backup current registry values
         $backupPath = "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG_Backup"
         if (-not (Test-Path $backupPath)) {
             New-Item -Path $backupPath -Force | Out-Null
@@ -30,12 +30,12 @@ if ($DcuCliPath) {
                 Set-ItemProperty -Path $backupPath -Name $key -Value $currentValue.$key -Type DWord -Force
             }
         }
-        # Update registry values
+# Update registry values
         foreach ($key in $registryKeys.Keys) {
             Set-ItemProperty -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG" -Name $key -Value $registryKeys[$key] -Type DWord -Force
         }
 
-        # Configure settings
+# Configure settings
         $process = Start-Process $DcuCliPath -ArgumentList '/configure -lockSettings=enable -updatesNotification=disable -scheduleManual -userConsent=disable -silent -autoSuspendBitlocker=enable' -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -eq 0) {
             Write-Output "Dell Command Update has been configured, the following settings have been applied:`n
@@ -45,6 +45,7 @@ if ($DcuCliPath) {
             - user consent = disabled`n
             - automatically suspend bitlocker = enabled
             " 
+#set custom fields
             Ninja-Property-Set dcuInstallStatus 'YES: configured'
             Ninja-Property-Set dellCommandUpdateInstalled 'YES: configured'
         } else {

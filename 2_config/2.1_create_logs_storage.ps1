@@ -1,4 +1,5 @@
 param (
+# take a parameter taht is the path you wish to use to create the folder
     # [Parameter(Mandatory=$true)]
     [string]$env:folderPath
 )

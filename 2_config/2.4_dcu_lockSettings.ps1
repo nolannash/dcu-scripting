@@ -1,4 +1,3 @@
-
 # Specify possible paths where dcu-cli.exe might be located
 $PossibleDcuCliPaths = @(
     "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe",
