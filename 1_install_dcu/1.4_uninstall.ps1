@@ -32,7 +32,7 @@ function Get-DcuUninstallString {
 function Uninstall-DellCommandUpdate {
     $uninstallString = Get-DcuUninstallString
     if ($uninstallString) {
-        Write-Host "Uninstall string found: $uninstallString"
+        Write-Output "Uninstall string found: $uninstallString"
         
         # Extract the path and any arguments
         if ($uninstallString -match '^"(.+?)"(.*)$') {
@@ -48,22 +48,22 @@ function Uninstall-DellCommandUpdate {
             $uninstallerArgs += " /silent"
         }
         
-        Write-Host "Attempting to uninstall Dell Command Update..."
+        Write-Output "Attempting to uninstall Dell Command Update..."
         try {
             $process = Start-Process -FilePath $uninstallerPath -ArgumentList $uninstallerArgs -Wait -NoNewWindow -PassThru
             if ($process.ExitCode -eq 0) {
-                Write-Host "Dell Command Update uninstalled successfully."
+                Write-Output "Dell Command Update uninstalled successfully."
                 return $true
             } else {
-                Write-Host "Uninstallation failed with exit code: $($process.ExitCode)"
+                Write-Output "Uninstallation failed with exit code: $($process.ExitCode)"
                 return $false
             }
         } catch {
-            Write-Host "Error during uninstallation: $_"
+            Write-Output "Error during uninstallation: $_"
             return $false
         }
     } else {
-        Write-Host "Uninstall string not found. Manual removal may be required."
+        Write-Output "Uninstall string not found. Manual removal may be required."
         return $false
     }
 }
@@ -71,27 +71,27 @@ function Uninstall-DellCommandUpdate {
 # Main script logic
 try {
     if (Test-DellCommandUpdateInstalled) {
-        Write-Host "Dell Command Update is installed. Proceeding with uninstallation."
+        Write-Output "Dell Command Update is installed. Proceeding with uninstallation."
         $uninstallSuccess = Uninstall-DellCommandUpdate
         if ($uninstallSuccess) {
             Ninja-Property-Set dcuUninstallStatus "Success"
-            Write-Host "Dell Command Update has been successfully uninstalled."
+            Write-Output "Dell Command Update has been successfully uninstalled."
         } else {
             Ninja-Property-Set dcuUninstallStatus "Failure"
-            Write-Host "Failed to uninstall Dell Command Update."
+            Write-Output "Failed to uninstall Dell Command Update."
         }
     } else {
-        Write-Host "Dell Command Update is not installed."
+        Write-Output "Dell Command Update is not installed."
         Ninja-Property-Set dcuUninstallStatus "Not Installed"
     }
 } catch {
-    Write-Host "An unexpected error occurred: $_"
+    Write-Output "An unexpected error occurred: $_"
     Ninja-Property-Set dcuUninstallStatus "Script Error"
 }
 
 # Final check to confirm uninstallation
 if (-not (Test-DellCommandUpdateInstalled)) {
-    Write-Host "Confirmed: Dell Command Update is not present on the system."
+    Write-Output "Confirmed: Dell Command Update is not present on the system."
 } else {
-    Write-Host "Warning: Dell Command Update may still be present on the system. Manual check recommended."
+    Write-Output "Warning: Dell Command Update may still be present on the system. Manual check recommended."
 }

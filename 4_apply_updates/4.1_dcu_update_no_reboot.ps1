@@ -19,12 +19,12 @@ foreach ($path in $PossibleDcuCliPaths) {
 # Check if dcu-cli.exe was found
 if ($DcuCliPath) {
     # Display a message indicating the detection of Dell Command Update CLI
-    Write-Host "Dell Command Update CLI found at $DcuCliPath. Proceeding with operations..." 
+    Write-Output "Dell Command Update CLI found at $DcuCliPath. Proceeding with operations..." 
     try {
         # Start dcu-cli.exe to check if it runs properly
         Start-Process -FilePath $DcuCliPath -ArgumentList "/version" -Wait -NoNewWindow -ErrorAction Stop
         # Display a message indicating that Dell Command Update CLI is running properly
-        Write-Host "`nDell Command Update CLI is running properly." -ForegroundColor Green
+        Write-Output "`nDell Command Update CLI is running properly." -ForegroundColor Green
 
         $now = Get-Date
         $formattedDateTime = $now.ToString("MM/dd/yyyy [HH:mm:ss]")
@@ -90,12 +90,12 @@ if ($DcuCliPath) {
             Ninja-Property-Set mostRecentDcuScan "Updates Applied - $formattedDateTime" --stdin
         }
 
-        Write-Host "Scans and updates completed successfully." -ForegroundColor Cyan
+        Write-Output "Scans and updates completed successfully." -ForegroundColor Cyan
     } catch {
         # Display an error message if an exception occurs during the process
-        Write-Host "Error: $_" -ForegroundColor Red
+        Write-Output "Error: $_" -ForegroundColor Red
     }
 } else {
     # Display an error message if Dell Command Update CLI is not found
-    Write-Host "Error: Dell Command Update CLI (dcu-cli.exe) not found in the expected paths." 
+    Write-Output "Error: Dell Command Update CLI (dcu-cli.exe) not found in the expected paths." 
 }

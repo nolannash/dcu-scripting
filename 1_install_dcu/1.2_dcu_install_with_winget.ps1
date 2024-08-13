@@ -1,27 +1,27 @@
 $WingetPath = "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_1.22.11261.0_x64__8wekyb3d8bbwe\winget.exe"
 # Function to uninstall Dell Command Update using winget
 function Uninstall-DellCommandUpdateUsingWinget {
-    Write-Host "Uninstalling Dell Command Update using winget..."
+    Write-Output "Uninstalling Dell Command Update using winget..."
     try {
         Start-Process $WingetPath -ArgumentList 'uninstall --id Dell.CommandUpdate --silent --force' -Wait -NoNewWindow
-        Write-Host "Dell Command Update uninstalled successfully using winget."
+        Write-Output "Dell Command Update uninstalled successfully using winget."
         return $true
     } catch {
-        Write-Host "Failed to uninstall Dell Command Update using winget: $_"
+        Write-Output "Failed to uninstall Dell Command Update using winget: $_"
         return $false
     }
 }
 
 # Function to install Dell Command Update using winget
 function Install-DellCommandUpdateUsingWinget {
-    Write-Host "Installing Dell Command Update using winget..."
+    Write-Output "Installing Dell Command Update using winget..."
     try {
         winget source update
         Start-Process $WingetPath -ArgumentList 'install --name Dell.CommandUpdate --silent --force' -Wait -NoNewWindow
-        Write-Host "Dell Command Update installed successfully using winget."
+        Write-Output "Dell Command Update installed successfully using winget."
         return $true
     } catch {
-        Write-Host "Failed to install Dell Command Update using winget: $_"
+        Write-Output "Failed to install Dell Command Update using winget: $_"
         return $false
     }
 }
@@ -30,7 +30,7 @@ function Install-DellCommandUpdateUsingWinget {
 try {
     # Uninstall Dell Command Update if already installed
     if (Uninstall-DellCommandUpdateUsingWinget) {
-        Write-Host "Uninstalled Dell Command Update successfully."
+        Write-Output "Uninstalled Dell Command Update successfully."
     }
 
     # Install Dell Command Update using winget
@@ -45,7 +45,7 @@ try {
 }
 catch {
     # Handle errors during installation/uninstallation
-    Write-Host "Error during installation/uninstallation process: $_"
+    Write-Output "Error during installation/uninstallation process: $_"
 
     # Set Ninja custom field values on error
     Ninja-Property-Set set dellcommandupdateInstalled 'No'

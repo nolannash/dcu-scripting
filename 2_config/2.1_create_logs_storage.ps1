@@ -9,7 +9,7 @@ try {
 
     # Check if the specified folder exists
     if (Test-Path -Path $location -PathType Container) {
-        Write-Host "Folder '$location' exists."
+        Write-Output "Folder '$location' exists."
 
         # Define the subfolder name
         $subfolderName = "logs"
@@ -19,17 +19,17 @@ try {
         if (-not (Test-Path -Path $subfolderPath -PathType Container)) {
             # Create the subfolder if it doesn't exist
             New-Item -Path $subfolderPath -ItemType Directory
-            Write-Host "Subfolder '$subfolderName' created inside '$location'."
+            Write-Output "Subfolder '$subfolderName' created inside '$location'."
         } else {
-            Write-Host "Subfolder '$subfolderName' already exists inside '$location'."
+            Write-Output "Subfolder '$subfolderName' already exists inside '$location'."
         }
 
         # Set NinjaRMM property
         # Note: Ensure Ninja-Property-Set command is correctly configured
         Ninja-Property-Set dcuLogLocation $subfolderPath
     } else {
-        Write-Host "Folder '$location' does not exist."
+        Write-Output "Folder '$location' does not exist."
     }
 } catch {
-    Write-Host "An error occurred: $_"
+    Write-Output "An error occurred: $_"
 }

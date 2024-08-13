@@ -23,14 +23,14 @@ if ($DcuCliPath) {
         $arguments = "/configure -exportSettings=`"$ExportPath`""
 
         # Use Start-Process to run the command
-        Write-Host "Running DCU CLI..."
+        Write-Output "Running DCU CLI..."
         Start-Process -FilePath $DcuCliPath -ArgumentList $arguments -NoNewWindow -Wait
 
-        Write-Host "Settings exported to: $ExportPath"
+        Write-Output "Settings exported to: $ExportPath"
     }
     catch {
-        Write-Host "Error: $_" -ForegroundColor Red
+        Write-Output "Error: $_" -ForegroundColor Red
     }
 } else {
-    Write-Host "DCU CLI not found. Ensure Dell Command Update is installed." -ForegroundColor Yellow
+    Write-Output "DCU CLI not found. Ensure Dell Command Update is installed." -ForegroundColor Yellow
 }

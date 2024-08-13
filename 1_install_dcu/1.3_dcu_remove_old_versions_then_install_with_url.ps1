@@ -3,16 +3,16 @@ function Install-DellCommandUpdateUsingInstaller {
     $installerUrl = "https://downloads.dell.com/FOLDER11563484M/1/Dell-Command-Update-Windows-Universal-Application_P83K5_WIN_5.3.0_A00.EXE"
     $installerPath = "$env:TEMP\DCU_Setup.exe"
     
-    Write-Host "Downloading Dell Command Update installer..."
+    Write-Output "Downloading Dell Command Update installer..."
     try {
         Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
-        Write-Host "Installing Dell Command Update using downloaded installer..."
+        Write-Output "Installing Dell Command Update using downloaded installer..."
         Start-Process -FilePath $installerPath -ArgumentList '/s' -Wait -NoNewWindow
-        Write-Host "Dell Command Update installed successfully using the downloaded installer."
+        Write-Output "Dell Command Update installed successfully using the downloaded installer."
         Remove-Item $installerPath -Force
         return $true
     } catch {
-        Write-Host "Failed to install Dell Command Update using the downloaded installer: $_"
+        Write-Output "Failed to install Dell Command Update using the downloaded installer: $_"
         return $false
     }
 }
@@ -25,13 +25,13 @@ function Uninstall-DellCommandUpdate {
     )
     foreach ($path in $installPaths) {
         if (Test-Path -Path $path) {
-            Write-Host "Dell Command Update found at $path. Uninstalling..."
+            Write-Output "Dell Command Update found at $path. Uninstalling..."
             try {
                 Remove-Item -Path $path -Recurse -Force
-                Write-Host "Uninstalled Dell Command Update successfully from $path."
+                Write-Output "Uninstalled Dell Command Update successfully from $path."
             } catch {
                 $errorMessage = $_.Exception.Message
-                Write-Host ("Failed to uninstall Dell Command Update from " + $path + ": " + $errorMessage)
+                Write-Output ("Failed to uninstall Dell Command Update from " + $path + ": " + $errorMessage)
             }
         }
     }
@@ -48,14 +48,14 @@ try {
     # Set 'dcuInstallStatus' property for installation status
     if ($installSuccess) {
         Ninja-Property-Set set dcuInstallStatus 'Success'
-        Write-Host 'Dell Command Update successfully installed'
+        Write-Output 'Dell Command Update successfully installed'
     } else {
         Ninja-Property-Set set dcuInstallStatus 'Failure'
     }
 }
 catch {
     # Handle errors during installation/uninstallation
-    Write-Host "Error during installation/uninstallation process: $_"
+    Write-Output "Error during installation/uninstallation process: $_"
 
     # Set 'dcuInstallStatus' property on error
     Ninja-Property-Set set dcuInstallStatus 'Failure'

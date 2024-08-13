@@ -14,14 +14,14 @@ if ($DcuCliPath) {
 
         # Change the setting
         $arguments = "/configure -lockSettings=enable"
-        Write-Host "Executing: $DcuCliPath $arguments"
+        Write-Output "Executing: $DcuCliPath $arguments"
         Start-Process $DcuCliPath -ArgumentList $arguments -NoNewWindow -Wait
 
-        Write-Host "Command executed. Please check Dell Command Update to verify the changes."
+        Write-Output "Command executed. Please check Dell Command Update to verify the changes."
     }
     catch {
-        Write-Host "An error occurred: $_" -ForegroundColor Red
+        Write-Output "An error occurred: $_" -ForegroundColor Red
     }
 } else {
-    Write-Host "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Yellow
+    Write-Output "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Yellow
 }

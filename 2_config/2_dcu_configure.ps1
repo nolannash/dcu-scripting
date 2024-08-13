@@ -30,29 +30,30 @@ if ($DcuCliPath) {
                 Set-ItemProperty -Path $backupPath -Name $key -Value $currentValue.$key -Type DWord -Force
             }
         }
-
         # Update registry values
         foreach ($key in $registryKeys.Keys) {
             Set-ItemProperty -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG" -Name $key -Value $registryKeys[$key] -Type DWord -Force
         }
 
-        # Configure updates notifications
+        # Configure settings
         $process = Start-Process $DcuCliPath -ArgumentList '/configure -lockSettings=enable -updatesNotification=disable -scheduleManual -userConsent=disable -silent -autoSuspendBitlocker=enable' -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -eq 0) {
-            Write-Host "Dell Command Update has been configured, the following settings have been applied:`n
+            Write-Output "Dell Command Update has been configured, the following settings have been applied:`n
             - settings lock = enabled`n
             - update notifications = disabled`n
             - automatic updates = disabled`n
             - user consent = disabled`n
             - automatically suspend bitlocker = enabled
-            " -ForegroundColor Green
+            " 
+            Ninja-Property-Set dcuInstallStatus 'YES: configured'
+            Ninja-Property-Set dellCommandUpdateInstalled 'YES: configured'
         } else {
-            Write-Host "Error configuring Dell Command Update. Exit code: $($process.ExitCode)" -ForegroundColor Red
+            Write-Output "Error configuring Dell Command Update. Exit code: $($process.ExitCode)" 
         }
     }
     catch {
-        Write-Host "An error occurred: $_" -ForegroundColor Red
+        Write-Output "An error occurred: $_" 
     }
 } else {
-    Write-Host "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Yellow
+    Write-Output "DCU CLI not found. Please check if Dell Command Update is installed." 
 }

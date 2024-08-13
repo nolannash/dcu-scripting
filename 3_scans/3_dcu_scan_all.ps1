@@ -19,13 +19,13 @@ foreach ($path in $PossibleDcuCliPaths) {
 # Check if dcu-cli.exe was found
 if ($DcuCliPath) {
     # Display a message indicating the detection of Dell Command Update CLI
-    Write-Host "Dell Command Update CLI found at $DcuCliPath. Proceeding with operations..." 
+    Write-Output "Dell Command Update CLI found at $DcuCliPath. Proceeding with operations..." 
 
     try {
         # Start dcu-cli.exe to check if it runs properly
         Start-Process -FilePath $DcuCliPath -ArgumentList "/version" -Wait -NoNewWindow -ErrorAction Stop
         # Display a message indicating that Dell Command Update CLI is running properly
-        Write-Host "`nDell Command Update CLI is running properly." 
+        Write-Output "`nDell Command Update CLI is running properly." 
 
         $now = Get-Date
         $formattedDateTime = $now.ToString("MM/dd/yyyy [HH:mm:ss]")
@@ -37,8 +37,8 @@ if ($DcuCliPath) {
         # Save the output of the scan to the specified log file
         Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver,application " -NoNewWindow -RedirectStandardOutput $LogFilePath -Wait -ErrorAction Stop 
         # Display a message indicating the log file is saved
-        Write-Host "Scan completed Successfully"
-        Write-Host "Log file saved to $LogFilePath" 
+        Write-Output "Scan completed Successfully"
+        Write-Output "Log file saved to $LogFilePath" 
 
         # Read the contents of the log file
         $logContent = Get-Content -Path $LogFilePath
@@ -50,9 +50,9 @@ if ($DcuCliPath) {
         Ninja-Property-Set dcuScanLog $applicableUpdatesLine --stdin
     } catch {
         # Display an error message if an exception occurs during the process
-        Write-Host "Error: $_" -
+        Write-Output "Error: $_" -
     }
 } else {
     # Display an error message if Dell Command Update CLI is not found
-    Write-Host "Error: Dell Command Update CLI (dcu-cli.exe) not found in the expected paths." 
+    Write-Output "Error: Dell Command Update CLI (dcu-cli.exe) not found in the expected paths." 
 }
