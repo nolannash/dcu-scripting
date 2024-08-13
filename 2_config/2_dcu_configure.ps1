@@ -1,13 +1,11 @@
 # Define registry keys to be modified
 $registryKeys = @{
-    'ShowSetupPopup' = 0
     'DCUconfigured' = 1
 }
 # The DCUconfigured registry key is used by Dell Command Update (DCU) to track whether the system has been configured by the tool. 
 # Specifically, setting this key to 1 indicates that DCU has completed its configuration on the system. 
 # This configuration could include settings like disabling update notifications, setting update schedules, 
 # or other custom preferences for how DCU manages updates on the device.
-
 
 
 # Specify possible paths where dcu-cli.exe might be located
@@ -36,13 +34,18 @@ if ($DcuCliPath) {
         # Update registry values
         foreach ($key in $registryKeys.Keys) {
             Set-ItemProperty -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG" -Name $key -Value $registryKeys[$key] -Type DWord -Force
-            Write-Host "Updated registry key: $key = $($registryKeys[$key])"
         }
 
         # Configure updates notifications
         $process = Start-Process $DcuCliPath -ArgumentList '/configure -lockSettings=enable -updatesNotification=disable -scheduleManual -userConsent=disable -silent -autoSuspendBitlocker=enable' -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -eq 0) {
-            Write-Host "Dell Command Update has been configured to disable update notifications." -ForegroundColor Green
+            Write-Host "Dell Command Update has been configured, the following settings have been applied:`n
+            - settings lock = enabled`n
+            - update notifications = disabled`n
+            - automatic updates = disabled`n
+            - user consent = disabled`n
+            - automatically suspend bitlocker = enabled
+            " -ForegroundColor Green
         } else {
             Write-Host "Error configuring Dell Command Update. Exit code: $($process.ExitCode)" -ForegroundColor Red
         }

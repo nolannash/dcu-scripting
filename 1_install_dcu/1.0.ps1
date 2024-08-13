@@ -29,15 +29,15 @@ try {
     # Set 'dcuInstallStatus' property based on installation success
     if ($installSuccess) {
         # Assuming Ninja-Property-Set is a predefined function or command
-        Ninja-Property-Set dcuInstallStatus 'YES'
+        Ninja-Property-Set dcuInstallStatus 'YES: not configured'
         Write-Output 'Dell Command Update successfully installed'
     } else {
-        Ninja-Property-Set dcuInstallStatus 'Install Failed'
+        Ninja-Property-Set dcuInstallStatus 'NO: Install Failed'
     }
 } catch {
     # Handle any errors during the installation process
     Write-Output "Error during installation process: $_"
 
     # Set 'dcuInstallStatus' property on error
-    Ninja-Property-Set dcuInstallStatus 'NO'
+    Ninja-Property-Set dcuInstallStatus "NO: $_"
 }
