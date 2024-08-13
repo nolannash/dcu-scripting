@@ -9,22 +9,28 @@ $DcuCliPath = $PossibleDcuCliPaths | Where-Object { Test-Path $_ -PathType Leaf 
 
 if ($DcuCliPath) {
     try {
-        $now = Get-Date -Format "mm-dd-yyyy"
-        # Define the export path
-        $ExportPath = "C:\Users\Nolan\Documents\Code\Dell Command Update\logs_and_exports\DCU_Settings$now"
+        # Define the export directory and ensure it exists
+        $ExportDir = "C:\Users\Nolan\Documents\Code\Dell Command Update\logs_and_exports"
+        if (-not (Test-Path -Path $ExportDir)) {
+            New-Item -Path $ExportDir -ItemType Directory | Out-Null
+        }
+
+        # Create a unique file name with a timestamp
+        $Timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
+        $ExportPath = Join-Path $ExportDir "settings_export__1.$Timestamp"
 
         # Construct the arguments string
         $arguments = "/configure -exportSettings=`"$ExportPath`""
 
         # Use Start-Process to run the command
-        Write-Host "Executing: $DcuCliPath $arguments"
-        Start-Process -FilePath $DcuCliPath -ArgumentList $arguments -NoNewWindow
+        Write-Host "Running DCU CLI..."
+        Start-Process -FilePath $DcuCliPath -ArgumentList $arguments -NoNewWindow -Wait
 
-        Write-Host "Command executed. Please check Dell Command Update to verify the changes."
+        Write-Host "Settings exported to: $ExportPath"
     }
     catch {
-        Write-Host "An error occurred: $_" -ForegroundColor Red
+        Write-Host "Error: $_" -ForegroundColor Red
     }
 } else {
-    Write-Host "DCU CLI not found. Please check if Dell Command Update is installed." -ForegroundColor Yellow
+    Write-Host "DCU CLI not found. Ensure Dell Command Update is installed." -ForegroundColor Yellow
 }

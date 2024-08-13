@@ -1,13 +1,14 @@
 ﻿<Configuration>
-  <Group Name="Settings" Version="5.3.0" TimeSaved="8/12/2024 4:52:13 PM (UTC -7:00)">
+  <Group Name="Settings" Version="5.4.0" TimeSaved="8/13/2024 11:31:33 AM (UTC -7:00)">
     <Group Name="General">
       <Property Name="SettingsModifiedTime">
-        <Value>8/12/2024 4:51:58 PM</Value>
+        <Value>8/12/2024 5:01:55 PM</Value>
       </Property>
       <Property Name="DownloadPath" Default="ValueIsDefault" />
       <Property Name="CustomCatalogPaths" Default="ValueIsDefault" />
       <Property Name="EnableDefaultDellCatalog" Default="ValueIsDefault" />
       <Property Name="EnableCatalogXML" Default="ValueIsDefault" />
+      <Property Name="TestMode" Default="ValueIsDefault" />
       <Property Name="UserConsent" Default="ValueIsDefault" />
       <Property Name="SuspendBitLocker">
         <Value>true</Value>
