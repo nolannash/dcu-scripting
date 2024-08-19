@@ -1,0 +1,53 @@
+# Logs and exports
+/logs_and_exports/*
+*.log
+
+# Git files
+.git
+./git/*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Dependency directories
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Build artifacts
+/dist/
+/build/
+
+# Environment files
+.env
+.env.*
+
+# Backup files
+*~
+*.bak
+*.old
+
+# Archives and compressed files
+*.zip
+*.tar.gz
+*.rar
+
+# Database files
+*.sqlite
+*.sqlite3
+
+# Project-specific
+/cache/
+/tmp/
