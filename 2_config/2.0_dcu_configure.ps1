@@ -4,16 +4,12 @@ $registryKeys = @{
 }
 # The DCUconfigured registry key is used by Dell Command Update (DCU) to track whether the system has been configured by the tool. 
 # Specifically, setting this key to 1 indicates that DCU has completed its configuration on the system. 
-# This configuration could include settings like disabling update notifications, setting update schedules, 
-# or other custom preferences for how DCU manages updates on the device.
-
 
 # Specify possible paths where dcu-cli.exe might be located
 $PossibleDcuCliPaths = @(
     "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe",
     "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe"
 )
-
 # Find dcu-cli.exe
 $DcuCliPath = $PossibleDcuCliPaths | Where-Object { Test-Path $_ -PathType Leaf } | Select-Object -First 1
 
@@ -30,12 +26,11 @@ if ($DcuCliPath) {
                 Set-ItemProperty -Path $backupPath -Name $key -Value $currentValue.$key -Type DWord -Force
             }
         }
-# Update registry values
+# Update registry value(s) set up to handle more than 1
         foreach ($key in $registryKeys.Keys) {
             Set-ItemProperty -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\CFG" -Name $key -Value $registryKeys[$key] -Type DWord -Force
         }
-
-# Configure settings
+# Configure settings and output to terminal
         $process = Start-Process $DcuCliPath -ArgumentList '/configure -lockSettings=enable -updatesNotification=disable -scheduleManual -userConsent=disable -silent -autoSuspendBitlocker=enable' -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -eq 0) {
             Write-Output "Dell Command Update has been configured, the following settings have been applied:`n
