@@ -2,6 +2,9 @@
 /logs_and_exports/*
 *.log
 
+# Mystery DCU_Extra
+/DCU_Extra/*
+
 # Git files
 .git
 ./git/*
