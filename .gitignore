@@ -1,5 +1,5 @@
 # Logs and exports
-/logs_and_exports/*
+./logs_and_exports/*
 *.log
 
 # Mystery DCU_Extra
