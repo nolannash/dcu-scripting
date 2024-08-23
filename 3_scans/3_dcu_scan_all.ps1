@@ -91,12 +91,13 @@ if ($DcuCliPath) {
             $rebootNeeded = $false
             $rebootTypes = @()
 
-            # Perform update scans and apply updates
+            # Perform update scans
             $updateTypes = @("bios", "firmware", "driver", "application")
             foreach ($updateType in $updateTypes) {
                 Write-Host "Checking for $updateType updates..."
                 $scanResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$updateType" -NoNewWindow -PassThru -Wait -ErrorAction Stop
-                $updateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/applyUpdates -updateType=$updateType -reboot=disable" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
+                # $updateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$updateType" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
+                #confirm scan vs apply update behavior
 
                 # Check for specific exit codes
                 switch ($updateResult.ExitCode) {
