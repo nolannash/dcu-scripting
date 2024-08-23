@@ -120,22 +120,18 @@ try {
         Write-Output "Non-CLI Dell Command Update is installed. Proceeding with uninstallation."
         $uninstallSuccess = Uninstall-NonCliDellCommandUpdate
         if ($uninstallSuccess) {
-            Ninja-Property-Set dcuNonCliUninstallStatus "Success"
             Write-Output "Non-CLI Dell Command Update has been successfully uninstalled."
         }
         else {
-            Ninja-Property-Set dcuNonCliUninstallStatus "Failure"
             Write-Output "Failed to uninstall non-CLI Dell Command Update."
         }
     }
     else {
         Write-Output "Non-CLI Dell Command Update is not installed."
-        Ninja-Property-Set dcuNonCliUninstallStatus "Not Installed"
     }
 }
 catch {
     Write-Output "An unexpected error occurred: $_"
-    Ninja-Property-Set dcuNonCliUninstallStatus "Script Error"
 }
 
 # Final check to confirm uninstallation of non-CLI versions

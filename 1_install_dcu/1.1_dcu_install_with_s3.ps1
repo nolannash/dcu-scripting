@@ -38,17 +38,15 @@ try {
     # Install using the installer from S3
     $installSuccess = Install-DellCommandUpdateUsingS3
 
-    # Set Ninja custom field values for successful installation
+
     if ($installSuccess) {
-        Ninja-Property-Set set dellcommandupdateInstalled 'Yes'
+        Write-Output 'Install Successful'
     } else {
-        Ninja-Property-Set set dellcommandupdateInstalled 'No'
+        Write-Output "Install failed to complete: $_"
     }
 }
 catch {
     # Handle errors during installation
     Write-Output "Error during installation process: $_"
 
-    # Set Ninja custom field values on error
-    Ninja-Property-Set set dellcommandupdateInstalled 'No'
 }
