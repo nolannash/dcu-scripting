@@ -1,10 +1,8 @@
 # Logs and exports
-./logs_and_exports/*
-*.log
-logs_and_exports/
+/logs_and_exports/
 
 # Mystery DCU_Extra
-/DCU_Extra/*
+/DCU_Extra/
 
 # Git files
 .git
