@@ -1,5 +1,5 @@
 # Dell Command Update Automation Project
-
+# This readme is out of date and needs to be updated
 ## Overview
 
 This repository contains scripts and configurations for automating the deployment, configuration, and scanning processes using Dell Command | Update (DCU). The project aims to streamline the management of Dell devices within an MSP (Managed Service Provider) environment. For best results scripts should be run as administrator. The scripts also assume you are using the NinjaOneRMM platform, but can be easily modified to ignore that. 
