@@ -26,8 +26,20 @@ if ($DcuCliPath) {
         # Display a message indicating that Dell Command Update CLI is running properly
         Write-Output "`nDell Command Update CLI is running properly." -ForegroundColor Green
 
+        # Get the current date and time
         $now = Get-Date
-        $formattedDateTime = $now.ToString("MM/dd/yyyy [HH:mm:ss]")
+        $formattedDateTime = $now.ToString("yyyy-MM-dd_HH-mm-ss")
+
+        # Optionally hardcode an export directory path
+        $ExportDir = "#### ADD YOUR PATH ####"  # Replace this with your desired export directory path
+
+        # Check if the export directory exists, if not create it
+        if (-not (Test-Path -Path $ExportDir)) {
+            New-Item -Path $ExportDir -ItemType Directory | Out-Null
+        }
+
+        # Define the path where the update output will be exported
+        $ExportPath = Join-Path $ExportDir "update_log_$formattedDateTime.txt"
 
         # Define a flag to track whether a reboot is needed
         $rebootNeeded = $false
@@ -38,59 +50,44 @@ if ($DcuCliPath) {
             return ($null -ne $exitCode -and ($exitCode -eq 1 -or $exitCode -eq 5))
         }
 
-        # Check for BIOS updates and apply
-        $BiosUpdateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios" -NoNewWindow  -PassThru -Wait -ErrorAction Stop 
-        # Attempt to apply updates with reboot disabled
-        $BiosApplyResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/applyUpdates -updateType=bios -reboot=disable" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
-        # Check exit code for reboot indication
-        if  (CheckForReboot $BiosApplyResult.ExitCode) {
-            $rebootNeeded = $true
-            $rebootTypes += "bios"
+        # Apply all updates with reboot disabled
+        $updateTypes = @("bios", "firmware", "driver", "application")
+
+        # Initialize a variable to store all output messages
+        $outputLog = ""
+
+        foreach ($updateType in $updateTypes) {
+            # Check for updates of the current type and log output
+            $UpdateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$updateType" -NoNewWindow -PassThru -Wait -ErrorAction Stop
+            $outputLog += "Scan result for $updateType :`n$($UpdateResult | Format-List | Out-String)`n"
+            
+            # Apply updates with reboot disabled and log output
+            $ApplyResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/applyUpdates -updateType=$updateType -reboot=disable" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
+            $outputLog += "Apply result for $updateType :`n$($ApplyResult | Format-List | Out-String)`n"
+
+            # Check exit code for reboot indication
+            if (CheckForReboot $ApplyResult.ExitCode) {
+                $rebootNeeded = $true
+                $rebootTypes += $updateType
+            }
         }
 
-        # Check for firmware updates and apply
-        $FirmwareUpdateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=firmware" -NoNewWindow  -PassThru -Wait -ErrorAction Stop 
-        # Attempt to apply updates with reboot disabled
-        $FirmwareApplyResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/applyUpdates -updateType=firmware -reboot=disable" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
-        # Check exit code for reboot indication
-        if (CheckForReboot $FirmwareApplyResult.ExitCode) {
-            $rebootNeeded = $true
-            $rebootTypes += "firmware"
-        }
-
-        # Check for driver updates and apply
-        $DriverUpdateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=driver" -NoNewWindow  -PassThru -Wait -ErrorAction Stop 
-        # Attempt to apply updates with reboot disabled
-        $DriverApplyResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/applyUpdates -updateType=driver -reboot=disable" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
-        # Check exit code for reboot indication
-        if (CheckForReboot $DriverApplyResult.ExitCode) {
-            $rebootNeeded = $true
-            $rebootTypes += "drivers"
-        }
-
-        # Check for application updates and apply
-        $AppUpdateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=application" -NoNewWindow  -PassThru -Wait -ErrorAction Stop 
-        # Attempt to apply updates with reboot disabled
-        $AppApplyResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/applyUpdates -updateType=application -reboot=disable" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
-        # Check exit code for reboot indication
-        if (CheckForReboot $AppApplyResult.ExitCode) {
-            $rebootNeeded = $true
-            $rebootTypes += "application"
-        }
-
-        # Set Ninja custom field if a reboot is needed
+        # Provide feedback based on whether a reboot is needed and log the output
         if ($rebootNeeded) {
             # Join the reboot types into a comma-separated list
             $rebootTypeList = $rebootTypes -join ", "
-            Ninja-Property-Set dcuRebootNeeded "Yes reboot needed, for - $rebootTypeList"
-            Ninja-Property-Set mostRecentDcuScan "Updates available as of - $formattedDateTime" --stdin
+            $finalMessage = "Reboot needed for updates: $rebootTypeList. Please reboot your system."
         } else {
-            Ninja-Property-Set dcuRebootNeeded "No reboot needed, updates applied successfully"
-            Ninja-Property-Set dcuScanLog "No updates as of - $formattedDateTime"
-            Ninja-Property-Set mostRecentDcuScan "Updates Applied - $formattedDateTime" --stdin
+            $finalMessage = "Updates applied successfully. No reboot needed."
         }
 
-        Write-Output "Scans and updates completed successfully." -ForegroundColor Cyan
+        Write-Output $finalMessage
+        $outputLog += "$finalMessage`n"
+
+        # Export the output log to the specified file
+        $outputLog | Out-File -FilePath $ExportPath -Encoding UTF8
+
+        Write-Output "Update log exported to: $ExportPath"
     } catch {
         # Display an error message if an exception occurs during the process
         Write-Output "Error: $_" -ForegroundColor Red

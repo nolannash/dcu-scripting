@@ -1,62 +1,3 @@
-# # Specify possible paths where dcu-cli.exe might be located
-# $PossibleDcuCliPaths = @(
-#     "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe",
-#     "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe"
-# )
-
-# # Initialize a variable to store the actual path of dcu-cli.exe
-# $DcuCliPath = $null
-# $logStorage = Ninja-Property-Get dcuLogLocation
-# # Iterate through each possible path to check if dcu-cli.exe exists
-# foreach ($path in $PossibleDcuCliPaths) {
-#     if (Test-Path $path -PathType Leaf) {
-#         # If dcu-cli.exe is found, set the path and break the loop
-#         $DcuCliPath = $path
-#         break
-#     }
-# }
-
-# # Check if dcu-cli.exe was found
-# if ($DcuCliPath) {
-#     # Display a message indicating the detection of Dell Command Update CLI
-#     Write-Output "Dell Command Update CLI found at $DcuCliPath. Proceeding with operations..." 
-
-#     try {
-#         # Start dcu-cli.exe to check if it runs properly
-#         Start-Process -FilePath $DcuCliPath -ArgumentList "/version" -Wait -NoNewWindow -ErrorAction Stop
-#         # Display a message indicating that Dell Command Update CLI is running properly
-#         Write-Output "`nDell Command Update found and CLI is running properly." 
-
-#         $now = Get-Date
-#         $formattedDateTime = $now.ToString("MM/dd/yyyy [HH:mm]")
-#         Ninja-Property-Set mostRecentDcuScan $formattedDateTime --stdin
-
-#         # Specify the path to save the log file (use date as a unique ID)
-#         $LogFilePath = "$logStorage\$($now.ToString('MM-dd-yyyy_hh-mm'))_dcuUpdateLog.log"
-
-#         # Save the output of the scan to the specified log file
-#         Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=bios,firmware,driver,application " -NoNewWindow -RedirectStandardOutput $LogFilePath -Wait -ErrorAction Stop 
-#         # Display a message indicating the log file is saved
-#         Write-Output "Scan completed Successfully"
-#         Write-Output "Log file saved to $LogFilePath" 
-
-#         # Read the contents of the log file
-#         $logContent = Get-Content -Path $LogFilePath
-
-#         # Filter lines starting with "Number of Applicable Updates"
-#         $applicableUpdatesLine = $logContent | Where-Object { $_ -match '^Number of Applicable Updates' }
-
-#         # Set Ninja custom field with the applicable updates line
-#         Ninja-Property-Set dcuScanLog $applicableUpdatesLine --stdin
-#     } catch {
-#         # Display an error message if an exception occurs during the process
-#         Write-Output "Error: $_" -
-#     }
-# } else {
-#     # Display an error message if Dell Command Update CLI is not found
-#     Write-Output "Error: Dell Command Update CLI (dcu-cli.exe) not found in the expected paths." 
-# }
-# Specify possible paths where dcu-cli.exe might be located
 $PossibleDcuCliPaths = @(
     "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe",
     "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe"
@@ -96,11 +37,9 @@ if ($DcuCliPath) {
             foreach ($updateType in $updateTypes) {
                 Write-Host "Checking for $updateType updates..."
                 $scanResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$updateType" -NoNewWindow -PassThru -Wait -ErrorAction Stop
-                # $updateResult = Start-Process -FilePath $DcuCliPath -ArgumentList "/scan -updateType=$updateType" -NoNewWindow -PassThru -Wait -ErrorAction SilentlyContinue
-                #confirm scan vs apply update behavior
-
+            
                 # Check for specific exit codes
-                switch ($updateResult.ExitCode) {
+                switch ($scanResult.ExitCode) {
                     0 {
                         Write-Host "$updateType updates applied successfully."
                     }
@@ -126,16 +65,11 @@ if ($DcuCliPath) {
                     }
                 }
             }
-
-            # Set Ninja custom field based on reboot status
             if ($rebootNeeded) {
                 $rebootTypeList = $rebootTypes -join ", "
-                Ninja-Property-Set dcuRebootNeeded "Yes reboot needed, for - $rebootTypeList"
-                Ninja-Property-Set mostRecentDcuScan "Updates available as of - $formattedDateTime" --stdin
+                Write-Host "Reboot needed for $rebootTypeList update types"
             } else {
-                Ninja-Property-Set dcuRebootNeeded "No reboot needed, updates applied successfully"
-                Ninja-Property-Set dcuScanLog "No updates as of - $formattedDateTime"
-                Ninja-Property-Set mostRecentDcuScan "Updates Applied - $formattedDateTime" --stdin
+                Write-Host "No reboot needed, updates applied successfully"
             }
 
             Write-Host "Scans and updates completed successfully."
