@@ -1,3 +1,6 @@
+# Define the expected path for DCU CLI
+$expectedCliPath = 'C:\Program Files\Dell\CommandUpdate\dcu-cli.exe'
+
 # Define runnable versions of DCU CLI
 $cliDCU = 'dcu-cli.exe'
 $appDCU = 'DellCommandUpdate.exe'
@@ -55,8 +58,7 @@ $functions = {
                     # Look for directories matching the patterns
                     $folders = Get-ChildItem -Path $path -Directory -Recurse -ErrorAction Stop |
                     Where-Object { 
-                        $folder = $_.Name
-                        $Patterns | Where-Object { $folder -like $_ }
+                        $Patterns | Where-Object { $_ -like $_.Name }
                     }
                     if ($folders) {
                         foreach ($folder in $folders) {
@@ -81,7 +83,7 @@ $functions = {
         param(
             [Parameter(Mandatory=$true)]
             [ValidateNotNullOrEmpty()]
-            [array]$DcuFolders,
+            [string]$ExpectedCliPath,  # The exact path to check for the CLI
 
             [Parameter(Mandatory=$true)]
             [ValidateNotNullOrEmpty()]
@@ -89,46 +91,20 @@ $functions = {
         )
 
         $isValid = $false
-        $dcuFound = $false
-        $invalidDueToWinApps = $false
+        $cliFound = $false
 
-        foreach ($folder in $DcuFolders) {
-            if ($folder -like "*WindowsApps*") {
-                $dcuFound = $true
-                $invalidDueToWinApps = $true
-                continue
-            }
-
-            if ($folder -like "*Program Files*Dell*") {
-                $dcuFound = $true
-                $cliFound = $false
-                foreach ($exe in $Executables) {
-                    if ($exe -eq $cliDCU) {
-                        try {
-                            $foundExe = Get-ChildItem -Path $folder -Recurse -Filter $exe -ErrorAction Stop
-                            if ($foundExe) {
-                                $cliFound = $true
-                                $isValid = $true
-                                break
-                            }
-                        } catch {
-                            Write-Warning "Error searching for $exe in $folder. `nError: $_"
-                        }
-                    }
-                }
-                if ($cliFound) {
-                    Write-Output "DCU Installation Status: Valid `nREASON: CLI found at: `n$folder"
-                } else {
-                    Write-Output "DCU Installation Status: Invalid `nREASON: No CLI present at: `n$folder"
-                }
-            }
+        # Check if the expected CLI path exists
+        if (Test-Path $ExpectedCliPath) {
+            $cliFound = $true
+            $isValid = $true
         }
 
-        if (-not $dcuFound) {
-            Write-Output "DCU Installation Status:Invalid `nREASON: DCU not found"
+        # Final determination of status based on the search results
+        if ($cliFound -and $isValid) {
+            Write-Output "DCU Installation Status: Valid `nREASON: CLI found at: `n$ExpectedCliPath"
         }
-        elseif ($invalidDueToWinApps) {
-            Write-Output "DCU Installation Status: Invalid `nREASON: WindowsApps installation at: `n$folder"
+        elseif (-not $cliFound) {
+            Write-Output "DCU Installation Status: Invalid `nREASON: CLI not found at: `n$ExpectedCliPath"
         }
     }
 }
@@ -139,5 +115,5 @@ $functions = {
 # Execute the search for DCU folders
 $dcuFolders = Find-DcuInstallation -Paths $potentialDcuInstallPaths -Patterns $patterns
 
-# Validate the found DCU installation folders
-Test-DcuInstallation -DcuFolders $dcuFolders -Executables $executables
+# Validate the DCU installation by checking the expected path
+Test-DcuInstallation -ExpectedCliPath $expectedCliPath -Executables $executables
