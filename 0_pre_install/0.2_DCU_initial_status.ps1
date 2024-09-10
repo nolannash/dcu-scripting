@@ -1,143 +1,208 @@
-# Define runnable versions of DCU CLI
-$cliDCU = 'dcu-cli.exe'
-$appDCU = 'DellCommandUpdate.exe'
-
-$executables = @(
-    $cliDCU,
-    $appDCU
-)
+# Define the CLI executable name
+$cliExecutable = 'dcu-cli.exe'
 
 # Define potential locations where DCU can be found
-$winAppsPath = 'C:\Program Files\WindowsApps\'
-$progFiles86Path = 'C:\Program Files (x86)\Dell\'
-$progFilePath = 'C:\Program Files\Dell\'
 $potentialDcuInstallPaths = @(
-    $winAppsPath,
-    $progFiles86Path,
-    $progFilePath
+    'C:\Program Files\WindowsApps\',
+    'C:\Program Files (x86)\Dell\',
+    'C:\Program Files\Dell\'
 )
 
-# Patterns to detect various naming conventions for Dell Command Update
-$patterns = @(
-    "*dell*command*update*",
-    "*command*update*",
-    "*dcu*",
+# Patterns to detect Dell Command Update
+$dcuPatterns = @(
+    "*Dell*Command*Update*",
     "*DellCommandUpdate*",
-    "*Dell*Update*",
-    "*DellInc.*CommandUpdate*",
-    "*Dell.*CommandUpdate*",
-    "DellCommandUpdate_*",
-    "*CommandUpdate*_*_*"
+    "DCU*",
+    "*Command*Update*"
 )
 
-# Wrap functions in a script block
-$functions = {
-    # Function to locate DCU installation folders
-    function Find-DcuInstallation {
-        [CmdletBinding()]
-        param(
-            [Parameter(Mandatory=$true)]
-            [ValidateNotNullOrEmpty()]
-            [array]$Paths,    # Array of paths to search through
+# Patterns to detect conflicting Dell applications
+$conflictingAppPatterns = @(
+    "*Dell Update*",
+    "*DellUpdate*",
+    "*Dell SupportAssist*",
+    "*DellSupportAssist*"
+)
 
-            [Parameter(Mandatory=$true)]
-            [ValidateNotNullOrEmpty()]
-            [array]$Patterns  # Array of patterns to match against
-        )
-        
-        # Storage for found locations
-        $dcuLocations = @()
+# Function to write verbose output
+function Write-VerboseOutput {
+    param([string]$Message)
+    Write-Verbose $Message
+    # Add logging to a file if needed
+    # Add-Content -Path "log.txt" -Value $Message
+}
 
-        foreach ($path in $Paths) {
-            # Check each path to see if it exists
-            if (Test-Path $path) {
-                try {
-                    # Look for directories matching the patterns
-                    $folders = Get-ChildItem -Path $path -Directory -Recurse -ErrorAction Stop |
-                    Where-Object { 
-                        $folder = $_.Name
-                        $Patterns | Where-Object { $folder -like $_ }
-                    }
-                    if ($folders) {
-                        foreach ($folder in $folders) {
-                            $dcuLocations += $folder.FullName
-                        }
-                    }
-                }
-                catch {
-                    Write-Warning "Error searching in path: $path. `nError: $_"
+# Function to recursively search for the CLI executable with limited depth
+function Find-CliExecutable {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [string]$Executable,
+        [int]$MaxDepth = 3
+    )
+
+    $cliPath = $null
+    try {
+        $cliPath = Get-ChildItem -Path $Path -Recurse -Filter $Executable -Depth $MaxDepth -ErrorAction Stop | 
+            Select-Object -First 1 -ExpandProperty FullName
+    }
+    catch {
+        Write-VerboseOutput "Error searching in path: $Path. Error: $_"
+    }
+    return $cliPath
+}
+
+# Function to check if a folder matches any of the given patterns
+function Test-FolderMatchesPattern {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$FolderPath,
+        [Parameter(Mandatory=$true)]
+        [array]$Patterns
+    )
+    
+    foreach ($pattern in $Patterns) {
+        if ($FolderPath -like $pattern) {
+            return $true
+        }
+    }
+    return $false
+}
+
+# Function to check for conflicting applications
+function Test-ConflictingApps {
+    param (
+        [Parameter(Mandatory=$true)]
+        [array]$Paths,
+        [Parameter(Mandatory=$true)]
+        [array]$Patterns
+    )
+
+    foreach ($path in $Paths) {
+        if (Test-Path $path) {
+            try {
+                $conflictingFolders = Get-ChildItem -Path $path -Directory -Recurse -Depth 2 -ErrorAction Stop | 
+                    Where-Object { Test-FolderMatchesPattern -FolderPath $_.FullName -Patterns $Patterns }
+                
+                if ($conflictingFolders) {
+                    return $true
                 }
             }
-            else {
-                Write-Warning "Path not found: $path"
+            catch {
+                Write-VerboseOutput "Error searching for conflicting apps in path: $path. Error: $_"
             }
         }
-        return $dcuLocations
+    }
+    return $false
+}
+
+# Function to locate DCU installation folders and validate installation
+function Test-DcuInstallation {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [array]$Paths,
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [array]$DcuPatterns,
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CliExecutable,
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [array]$ConflictingPatterns
+    )
+    
+    $result = [PSCustomObject]@{
+        DCUFound = $false
+        CLIFound = $false
+        ConflictingAppFound = $false
+        CLIPath = $null
+        Status = ""
+        Reason = ""
     }
 
-    # Function to validate DCU installation
-    function Test-DcuInstallation {
-        [CmdletBinding()]
-        param(
-            [Parameter(Mandatory=$true)]
-            [ValidateNotNullOrEmpty()]
-            [array]$DcuFolders,
+    # Check for conflicting applications first
+    $result.ConflictingAppFound = Test-ConflictingApps -Paths $Paths -Patterns $ConflictingPatterns
+    if ($result.ConflictingAppFound) {
+        $result.Status = "Invalid"
+        $result.Reason = "Conflicting Dell application found"
+        Ninja-Property-Set dellCommandUpdateInstalled "INVALID: Dell Update Detected"
+        return $result
+    }
 
-            [Parameter(Mandatory=$true)]
-            [ValidateNotNullOrEmpty()]
-            [array]$Executables
-        )
-
-        $isValid = $false
-        $dcuFound = $false
-        $invalidDueToWinApps = $false
-
-        foreach ($folder in $DcuFolders) {
-            if ($folder -like "*WindowsApps*") {
-                $dcuFound = $true
-                $invalidDueToWinApps = $true
-                continue
-            }
-
-            if ($folder -like "*Program Files*Dell*") {
-                $dcuFound = $true
-                $cliFound = $false
-                foreach ($exe in $Executables) {
-                    if ($exe -eq $cliDCU) {
-                        try {
-                            $foundExe = Get-ChildItem -Path $folder -Recurse -Filter $exe -ErrorAction Stop
-                            if ($foundExe) {
-                                $cliFound = $true
-                                $isValid = $true
-                                break
-                            }
-                        } catch {
-                            Write-Warning "Error searching for $exe in $folder. `nError: $_"
+    # Check for DCU installation
+    foreach ($path in $Paths) {
+        if (Test-Path $path) {
+            try {
+                $folders = Get-ChildItem -Path $path -Directory -Recurse -Depth 2 -ErrorAction Stop | 
+                    Where-Object { Test-FolderMatchesPattern -FolderPath $_.FullName -Patterns $DcuPatterns }
+                
+                if ($folders) {
+                    $result.DCUFound = $true
+                    foreach ($folder in $folders) {
+                        $cliPath = Find-CliExecutable -Path $folder.FullName -Executable $CliExecutable
+                        if ($cliPath) {
+                            $result.CLIFound = $true
+                            $result.CLIPath = $cliPath
+                            break
                         }
                     }
                 }
-                if ($cliFound) {
-                    Write-Output "DCU Installation Status: Valid `nREASON: CLI found at: `n$folder"
-                } else {
-                    Write-Output "DCU Installation Status: Invalid `nREASON: No CLI present at: `n$folder"
-                }
+
+                if ($result.CLIFound) { break }
+            }
+            catch {
+                Write-VerboseOutput "Error searching in path: $path. Error: $_"
             }
         }
+        else {
+            Write-VerboseOutput "Path not found: $path"
+        }
+    }
 
-        if (-not $dcuFound) {
-            Write-Output "DCU Installation Status:Invalid `nREASON: DCU not found"
-        }
-        elseif ($invalidDueToWinApps) {
-            Write-Output "DCU Installation Status: Invalid `nREASON: WindowsApps installation at: `n$folder"
-        }
+    # Determine installation status
+    if (-not $result.DCUFound) {
+        $result.Status = "Not Installed"
+        $result.Reason = "No Dell Command Update folders found"
+        Ninja-Property-Set dellCommandUpdateInstalled "NO: DCU not present"
+    }
+    elseif ($result.DCUFound -and -not $result.CLIFound) {
+        $result.Status = "Invalid"
+        $result.Reason = "Dell Command Update folder found, but CLI not present"
+        Ninja-Property-Set dellCommandUpdateInstalled "INVALID: no cli"
+    }
+    elseif ($result.CLIFound) {
+        $result.Status = "Valid"
+        $result.Reason = "CLI found at: $($result.CLIPath)"
+        Ninja-Property-Set dellCommandUpdateInstalled "YES: no config"
+    }
+
+    return $result
+}
+
+# Function to get the current value of the custom field
+function Get-CustomFieldValue {
+    try {
+        $currentValue = Ninja-Property-Get dellCommandUpdateInstalled
+        return $currentValue
+    }
+    catch {
+        Write-VerboseOutput "Error getting custom field value: $_"
+        return $null
     }
 }
 
-# Invoke the script block to define the functions
-. $functions
+# Main execution
+$currentValue = Get-CustomFieldValue
 
-# Execute the search for DCU folders
-$dcuFolders = Find-DcuInstallation -Paths $potentialDcuInstallPaths -Patterns $patterns
-
-# Validate the found DCU installation folders
-Test-DcuInstallation -DcuFolders $dcuFolders -Executables $executables
+if ($currentValue -eq "YES: configured") {
+    Write-Output "DCU is already configured. Skipping installation check."
+}
+else {
+    $result = Test-DcuInstallation -Paths $potentialDcuInstallPaths -DcuPatterns $dcuPatterns -CliExecutable $cliExecutable -ConflictingPatterns $conflictingAppPatterns
+    Write-Output "DCU Installation Status: $($result.Status)"
+    Write-Output "REASON: $($result.Reason)"
+}
